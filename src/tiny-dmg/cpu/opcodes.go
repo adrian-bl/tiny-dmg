@@ -24,6 +24,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x18: {"JRn", 8, Op_JR_n},
 	0x20: {"JPNZ", 12, Op_JPnz}, // Fixme: This can be 12 or 8
 	0x21: {"LDHL", 12, Op_LD_HL_nn},
+	0x22: {"LDIx", 12, Op_LDI_HL_A},
 	0x2A: {"LDA+", 8, Op_LD_A_HLi},
 	0x31: {"LDSP", 12, Op_LD_SP_nn},
 	0x3E: {"LDAn", 8, Op_LDAn},
@@ -33,9 +34,12 @@ var OpCodes = map[uint8]OpEntry{
 	0xCB: {"CB! ", 12, Cb_Disp},  // fixme: cb takes 4 cycles + the code executed (mostly 8)
 	0xD0: {"RENC", 20, Op_RetNC}, // 20 or 8
 	0xE0: {"LDHn", 12, Op_LDHnA},
+	0xE6: {"ANDa", 8, Op_ANDAn},
 	0xF0: {"LDHA", 12, Op_LDHAn}, //
+	0xF1: {"POP!", 12, Op_POP_AF},
 	0xF3: {"DI  ", 4, Op_DI},
 	0xF5: {"PSaf", 16, Op_PUSH_AF},
+	0xFB: {"EI  ", 4, Op_EI},
 	0xFE: {"CPd8", 8, Op_CPd8},
 }
 
@@ -128,6 +132,20 @@ func Op_PUSH_AF(gb *GbCpu) {
 	gb.Reg.PC++
 }
 
+func Op_POP_AF(gb *GbCpu) {
+	// fixme: is the order correct?
+	gb.Reg.A = gb.popFromStack()
+	gb.Reg.F = gb.popFromStack()
+	gb.Reg.PC++;
+}
+
+// 0xe6 AND A, n
+func Op_ANDAn(gb *GbCpu) {
+	val := gb.Mem.GetByte(gb.Reg.PC+1)
+	Do_And_88(gb, &gb.Reg.A, val)
+	gb.Reg.PC += 2
+}
+
 func Op_LDHnA(gb *GbCpu) {
 	dst := uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + 0xFF00
 
@@ -172,10 +190,26 @@ func Op_LD_A_HLi(gb *GbCpu) {
 	gb.Reg.PC++
 }
 
+// Put value of A into location specified by HL, increment HL
+func Op_LDI_HL_A(gb *GbCpu) {
+	val := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	gb.Mem.WriteByte(val, gb.Reg.A)
+	val++
+	gb.Reg.L = uint8(val & 0xFF)
+	gb.Reg.H = uint8((val >> 8 & 0xFF))
+	gb.Reg.PC++
+}
+
 func Op_DI(gb *GbCpu) {
 	gb.InterruptsEnabled = false
 	gb.Reg.PC++
 	fmt.Printf(">>> Code disabled interrupts (Fixme: not handled yet)\n")
+}
+
+func Op_EI(gb *GbCpu) {
+	gb.InterruptsEnabled = true
+	gb.Reg.PC++
+	fmt.Printf(">>> Code enabled interrupts\n")
 }
 
 func Op_JP(gb *GbCpu) {

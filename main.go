@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	r, err := rom.NewFromDisk("test/hello-world.gb")
+	r, err := rom.NewFromDisk("/tmp/hello-world.gb")
 	if err != nil {
 		panic(err)
 	}

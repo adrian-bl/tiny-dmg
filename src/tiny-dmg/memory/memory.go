@@ -2,6 +2,7 @@ package memory
 
 import (
 	"fmt"
+	"io/ioutil"
 	"tiny-dmg/rom"
 )
 
@@ -88,5 +89,7 @@ func (m *Memory) WriteRaw(addr uint16, val byte) {
 }
 
 func (m *Memory) Dump() {
-	fmt.Printf(">> %v\n", m.memory)
+//	fmt.Printf("%v\n", m.memory[0x8000:0xa000])
+	ioutil.WriteFile("/tmp/x.data", m.memory[0x8000:0x97FF], 0644)
+
 }

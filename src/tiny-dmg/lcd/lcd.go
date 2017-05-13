@@ -73,40 +73,8 @@ func (l *Lcd) Update(opCycles uint8) {
 	 */
 
 	fmt.Printf("IST: cpu.lcdc=%d, cnt=%d, --> NOW=%d\n", l.cyclesCounter, opCycles, l.cyclesCounter-int16(opCycles))
-	l.cyclesCounter -= int16(opCycles)
 
-	state := l.m.GetByte(RegLcdState) // fixme, should only check byte 0 and 1!
-	for l.cyclesCounter <= 0 {
-		switch state {
-		case GpuModeHblank:
-			thisScanline := l.m.GetByte(RegCurrentScanline)
-			thisScanline++
-			l.m.WriteRaw(RegCurrentScanline, thisScanline)
-			if thisScanline > LastVisibleScanline {
-				l.cyclesCounter += 20 // ??!!
-				state = GpuModeVblank
-			} else {
-				l.cyclesCounter += CyclesSrchSprites
-				state = GpuModeSrchSprites
-			}
-		case GpuModeSrchSprites:
-			// fixme: lcd_refreshline()
-			l.cyclesCounter += CyclesTransToLCD
-			state = GpuModeTransToLCD
-		case GpuModeTransToLCD:
-			l.cyclesCounter += CyclesHblank
-			state = GpuModeHblank
-		case GpuModeVblank:
-			// todo: implement vblank
-			panic(nil)
-		default:
-			panic(nil)
-		}
-	}
-	l.m.WriteRaw(RegLcdState, state)
-	/*
-
-		l.cyclesCounter += uint16(opCycles)
+		l.cyclesCounter += int16(opCycles)
 
 		// FIXME: THIS IS A BITMASK: WE MUST TAKE AND SET 0xF
 		state := l.m.GetByte(RegLcdState)
@@ -151,7 +119,7 @@ func (l *Lcd) Update(opCycles uint8) {
 				panic(nil)
 		}
 		l.m.WriteRaw(RegLcdState, state)
-	*/
+		l.m.Dump()
 	/*
 
 		mode := uint8(0)
