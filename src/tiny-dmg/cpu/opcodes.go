@@ -136,12 +136,12 @@ func Op_POP_AF(gb *GbCpu) {
 	// fixme: is the order correct?
 	gb.Reg.A = gb.popFromStack()
 	gb.Reg.F = gb.popFromStack()
-	gb.Reg.PC++;
+	gb.Reg.PC++
 }
 
 // 0xe6 AND A, n
 func Op_ANDAn(gb *GbCpu) {
-	val := gb.Mem.GetByte(gb.Reg.PC+1)
+	val := gb.Mem.GetByte(gb.Reg.PC + 1)
 	Do_And_88(gb, &gb.Reg.A, val)
 	gb.Reg.PC += 2
 }

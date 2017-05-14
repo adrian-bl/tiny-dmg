@@ -6,7 +6,7 @@ import (
 
 func Do_Inc_Uint8(gb *GbCpu, target *uint8) {
 	gb.Reg.F &= ^(FlagZ | FlagN | FlagH)
-	result := *target+1
+	result := *target + 1
 	if result == 0 {
 		gb.Reg.F |= FlagZ
 	}
@@ -22,7 +22,7 @@ func Do_Inc_Uint8(gb *GbCpu, target *uint8) {
 func Do_Dec_Uint8(gb *GbCpu, target *uint8) {
 	gb.Reg.F &= ^(FlagZ | FlagH)
 	gb.Reg.F |= FlagN
-	result := *target -1
+	result := *target - 1
 
 	if result == 0 {
 		gb.Reg.F |= FlagZ

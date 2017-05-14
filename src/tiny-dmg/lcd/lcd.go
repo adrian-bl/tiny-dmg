@@ -72,54 +72,55 @@ func (l *Lcd) Update(opCycles uint8) {
 	 * Bei 632        STAT=3
 	 */
 
-	fmt.Printf("IST: cpu.lcdc=%d, cnt=%d, --> NOW=%d\n", l.cyclesCounter, opCycles, l.cyclesCounter-int16(opCycles))
+//	fmt.Printf("IST: cpu.lcdc=%d, cnt=%d, --> NOW=%d\n", l.cyclesCounter, opCycles, l.cyclesCounter-int16(opCycles))
 
-		l.cyclesCounter += int16(opCycles)
+	l.cyclesCounter += int16(opCycles)
 
-		// FIXME: THIS IS A BITMASK: WE MUST TAKE AND SET 0xF
-		state := l.m.GetByte(RegLcdState)
-		switch state {
-			case GpuModeHblank:
-				if l.cyclesCounter >= CyclesHblank {
-					l.cyclesCounter = 0
-					thisScanline := l.m.GetByte(RegCurrentScanline)
-					thisScanline++
-					l.m.WriteRaw(RegCurrentScanline, thisScanline)
-					if (thisScanline == LastVisibleScanline-1) {
-						state = GpuModeVblank
-					} else {
-						state = GpuModeSrchSprites
-					}
-				}
-			case GpuModeVblank:
-				if l.cyclesCounter >= CyclesPerScanline {
-					thisScanline := l.m.GetByte(RegCurrentScanline)
-					thisScanline++
-					state = GpuModeHblank
-					if (thisScanline > LastScanLine) {
-						//???
-						thisScanline = 0
-						state = GpuModeHblank
-					}
-					l.m.WriteRaw(RegCurrentScanline, thisScanline)
-				}
-			case GpuModeSrchSprites:
-				if l.cyclesCounter >= CyclesSrchSprites {
-					l.cyclesCounter = 0
-					state = GpuModeTransToLCD
-				}
-			case GpuModeTransToLCD: {
-				if l.cyclesCounter >= CyclesTransToLCD {
-					l.cyclesCounter = 0
-					state = GpuModeHblank
-					fmt.Printf(">>> RENDER SCANLINE?\n")
-				}
+	// FIXME: THIS IS A BITMASK: WE MUST TAKE AND SET 0xF
+	state := l.m.GetByte(RegLcdState)
+	switch state {
+	case GpuModeHblank:
+		if l.cyclesCounter >= CyclesHblank {
+			l.cyclesCounter = 0
+			thisScanline := l.m.GetByte(RegCurrentScanline)
+			thisScanline++
+			l.m.WriteRaw(RegCurrentScanline, thisScanline)
+			if thisScanline == LastVisibleScanline-1 {
+				state = GpuModeVblank
+			} else {
+				state = GpuModeSrchSprites
 			}
-			default:
-				panic(nil)
 		}
-		l.m.WriteRaw(RegLcdState, state)
-		l.m.Dump()
+	case GpuModeVblank:
+		if l.cyclesCounter >= CyclesPerScanline {
+			thisScanline := l.m.GetByte(RegCurrentScanline)
+			thisScanline++
+			state = GpuModeHblank
+			if thisScanline > LastScanLine {
+				//???
+				thisScanline = 0
+				state = GpuModeHblank
+			}
+			l.m.WriteRaw(RegCurrentScanline, thisScanline)
+		}
+	case GpuModeSrchSprites:
+		if l.cyclesCounter >= CyclesSrchSprites {
+			l.cyclesCounter = 0
+			state = GpuModeTransToLCD
+		}
+	case GpuModeTransToLCD:
+		{
+			if l.cyclesCounter >= CyclesTransToLCD {
+				l.cyclesCounter = 0
+				state = GpuModeHblank
+				fmt.Printf(">>> RENDER SCANLINE?\n")
+			}
+		}
+	default:
+		panic(nil)
+	}
+	l.m.WriteRaw(RegLcdState, state)
+	l.m.Dump()
 	/*
 
 		mode := uint8(0)
