@@ -72,7 +72,7 @@ func (l *Lcd) Update(opCycles uint8) {
 	 * Bei 632        STAT=3
 	 */
 
-//	fmt.Printf("IST: cpu.lcdc=%d, cnt=%d, --> NOW=%d\n", l.cyclesCounter, opCycles, l.cyclesCounter-int16(opCycles))
+	//	fmt.Printf("IST: cpu.lcdc=%d, cnt=%d, --> NOW=%d\n", l.cyclesCounter, opCycles, l.cyclesCounter-int16(opCycles))
 
 	l.cyclesCounter += int16(opCycles)
 

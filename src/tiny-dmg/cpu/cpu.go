@@ -40,9 +40,6 @@ type Registers struct {
 	PC uint16
 }
 
-// init: SP = 0xFFFE
-// init: PC = 0x0100
-
 func New(m *memory.Memory, l *lcd.Lcd) (gb GbCpu, err error) {
 	gb.Reg.SP = 0xFFFE
 	gb.Reg.PC = 0x0100

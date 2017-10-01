@@ -42,6 +42,14 @@ func Do_Inc_88(gb *GbCpu, target1 *uint8, target2 *uint8) {
 	gb.Reg.PC++
 }
 
+func Do_Dec_88(gb *GbCpu, target1 *uint8, target2 *uint8) {
+	val := uint16(*target1)<<8 + uint16(*target2)
+	val--
+	*target1 = uint8(val >> 8 & 0xFF)
+	*target2 = uint8(val & 0xFF)
+	gb.Reg.PC++
+}
+
 func Do_Load_88(gb *GbCpu, target1 *uint8, target2 *uint8) {
 	*target1 = gb.Mem.GetByte(gb.Reg.PC + 1)
 	*target2 = gb.Mem.GetByte(gb.Reg.PC + 2)
