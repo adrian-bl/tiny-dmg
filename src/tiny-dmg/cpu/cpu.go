@@ -67,7 +67,7 @@ func (gb *GbCpu) Boot() {
 
 		fmt.Printf("%04X %02X                        SP=%04X      BC=%02X%02X       DE=%02X%02X    ", gb.Reg.PC, op, gb.Reg.SP, gb.Reg.B, gb.Reg.C, gb.Reg.D, gb.Reg.E)
 		fmt.Printf("HL=%02X%02X    A=%02X F=%02X", gb.Reg.H, gb.Reg.L, gb.Reg.A, gb.Reg.F)
-		fmt.Printf("  op=%v ## %d, c=%d, ff44 = %X, >> FIXME: STAT = %X, LCDC=%02X\n", gb.OpCode, i, gb.Cycles, gb.Mem.GetByte(0xFF44), gb.Mem.GetByte(0xFF41), gb.Mem.GetByte(0xFF40))
+		fmt.Printf("  op=%-18s, c=%d ## %d, c=%d, ff44 = %X, >> FIXME: STAT = %X, LCDC=%02X\n", gb.OpCode.Name, gb.OpCode.Cycles, i, gb.Cycles, gb.Mem.GetByte(0xFF44), gb.Mem.GetByte(0xFF41), gb.Mem.GetByte(0xFF40))
 		i++
 
 		gb.OpCode.Cback(gb)

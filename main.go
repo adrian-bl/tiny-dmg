@@ -6,7 +6,6 @@ import (
 	"tiny-dmg/lcd"
 	"tiny-dmg/memory"
 	"tiny-dmg/rom"
-	"tiny-dmg/ui"
 )
 
 func main() {
@@ -32,8 +31,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	go ui.Run()
 
 	fmt.Printf("done! machine dump: %v\n", gb)
 	gb.Mem.PowerOn()

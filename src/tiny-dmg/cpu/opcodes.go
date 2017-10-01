@@ -15,10 +15,12 @@ var OpCodes = map[uint8]OpEntry{
 	0x01: {"LDHL", 12, Op_LD_BC_nn},
 	0x04: {"INCb", 4, func(gb *GbCpu) { Do_Inc_Uint8(gb, &gb.Reg.B) }},
 	0x05: {"DECb", 4, func(gb *GbCpu) { Do_Dec_Uint8(gb, &gb.Reg.B) }},
+	0x06: {"LD B, n    ;", 8, Op_LDBn},
 	0x07: {"RLCA", 4, Op_RLCA},
 	0x0B: {"DECbc", 8, func(gb *GbCpu) { Do_Dec_88(gb, &gb.Reg.B, &gb.Reg.C) }},
 	0x0C: {"INCc", 4, func(gb *GbCpu) { Do_Inc_Uint8(gb, &gb.Reg.C) }},
 	0x0D: {"DECc", 4, func(gb *GbCpu) { Do_Dec_Uint8(gb, &gb.Reg.C) }},
+	0x0E: {"LD C, n    ;", 8, Op_LDCn},
 	0x11: {"LDHL", 12, Op_LD_DE_nn},
 	0x12: {"LDnA", 8, Op_LD_n_A},
 	0x13: {"INC3", 8, func(gb *GbCpu) { Do_Inc_88(gb, &gb.Reg.D, &gb.Reg.E) }},
@@ -30,7 +32,8 @@ var OpCodes = map[uint8]OpEntry{
 	0x31: {"LDSP", 12, Op_LD_SP_nn},
 	0x3E: {"LDAn", 8, Op_LDAn},
 	0x78: {"LDAB", 4, Op_LDAB},
-	0x7E: {"LDAHL",8, Op_LD_A_HL},
+	0x7E: {"LDAHL", 8, Op_LD_A_HL},
+	0xAF: {"XOR A      ;", 4, func(gb *GbCpu) { Do_Xor_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xB1: {"ORAC", 4, Op_OrAC},
 	0xC3: {"JP  ", 16, Op_JP},
 	0xC9: {"RET ", 16, Op_RET},
@@ -84,7 +87,7 @@ func Op_CPd8(gb *GbCpu) {
 	if fixmeSlowPrefixed < 0 {
 		// (gb.Reg.A&0xF < val&0xF) ??
 		gb.Reg.F |= FlagH
-		fmt.Printf("!! would set H bit?! -> %d\n", val)
+		panic(nil)
 	}
 	if gb.Reg.A < val {
 		gb.Reg.F |= FlagC
@@ -121,12 +124,6 @@ func Op_LDAB(gb *GbCpu) {
 	gb.Reg.A = gb.Reg.B
 	gb.Reg.PC++
 }
-
-func Op_LDAHL(gb *GbCpu) {
-	gb.Reg.A = gb.Reg.B
-	gb.Reg.PC++
-}
-
 
 func Op_LDHAn(gb *GbCpu) {
 	src := uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + 0xFF00
@@ -182,6 +179,16 @@ func Op_LDHnA(gb *GbCpu) {
 
 func Op_LDAn(gb *GbCpu) {
 	gb.Reg.A = gb.Mem.GetByte(gb.Reg.PC + 1)
+	gb.Reg.PC += 2
+}
+
+func Op_LDBn(gb *GbCpu) {
+	gb.Reg.B = gb.Mem.GetByte(gb.Reg.PC + 1)
+	gb.Reg.PC += 2
+}
+
+func Op_LDCn(gb *GbCpu) {
+	gb.Reg.C = gb.Mem.GetByte(gb.Reg.PC + 1)
 	gb.Reg.PC += 2
 }
 
@@ -254,21 +261,21 @@ func Op_JR_n(gb *GbCpu) {
 	fmt.Printf("FETCH: %d", gb.Mem.GetByte(gb.Reg.PC+1))
 	gb.Reg.PC += 2 + uint16(gb.Mem.GetByte(gb.Reg.PC+1))
 	fmt.Printf(" -> JUMP TO %X\n", gb.Reg.PC)
-	if (gb.Reg.PC != 0x84 && gb.Reg.PC != 0x9A && gb.Reg.PC != 0xB0) {
-	panic(nil)
-/*
-func (c *CPU) relativeJump(dist uint8) {
-	c.PC = signedAdd(c.PC, dist)
-}
+	if gb.Reg.PC != 0x84 && gb.Reg.PC != 0x9A && gb.Reg.PC != 0xB0 {
+		panic(nil)
+		/*
+		   func (c *CPU) relativeJump(dist uint8) {
+		   	c.PC = signedAdd(c.PC, dist)
+		   }
 
-func signedAdd(a uint16, b uint8) uint16 {
-	bSigned := int8(b)
-	if bSigned >= 0 {
-		return a + uint16(bSigned)
-	} else {
-		return a - uint16(-bSigned)
-	}
-}*/
+		   func signedAdd(a uint16, b uint8) uint16 {
+		   	bSigned := int8(b)
+		   	if bSigned >= 0 {
+		   		return a + uint16(bSigned)
+		   	} else {
+		   		return a - uint16(-bSigned)
+		   	}
+		   }*/
 	}
 }
 

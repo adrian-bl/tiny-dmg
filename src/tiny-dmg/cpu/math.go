@@ -66,3 +66,13 @@ func Do_And_88(gb *GbCpu, target *uint8, value uint8) {
 	}
 	*target = result
 }
+
+func Do_Xor_88(gb *GbCpu, target *uint8, value uint8) {
+	gb.Reg.F &= ^FlagMask
+
+	*target ^= value
+	if *target == 0 {
+		gb.Reg.F |= FlagZ
+	}
+	gb.Reg.PC++
+}
