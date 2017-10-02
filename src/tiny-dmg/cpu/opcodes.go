@@ -12,7 +12,7 @@ type OpEntry struct {
 
 var OpCodes = map[uint8]OpEntry{
 	0x00: {"NOOP", 4, Op_NOP},
-	0x01: {"LDHL", 12, Op_LD_BC_nn},
+	0x01: {"LD BC,d16", 12, Op_LD_BC_nn},
 	0x04: {"INCb", 4, func(gb *GbCpu) { Do_Inc_Uint8(gb, &gb.Reg.B) }},
 	0x05: {"DECb", 4, func(gb *GbCpu) { Do_Dec_Uint8(gb, &gb.Reg.B) }},
 	0x06: {"LD B, n    ;", 8, Op_LDBn},
@@ -27,9 +27,11 @@ var OpCodes = map[uint8]OpEntry{
 	0x18: {"JRn", 8, Op_JR_n},
 	0x20: {"JPNZ", 12, Op_JPnz}, // Fixme: This can be 12 or 8
 	0x21: {"LDHL", 12, Op_LD_HL_nn},
-	0x22: {"LDIx", 12, Op_LDI_HL_A},
+	0x22: {"LD (HL+),A", 8, Op_LDI_HL_A},
 	0x2A: {"LDA+", 8, Op_LD_A_HLi},
 	0x31: {"LDSP", 12, Op_LD_SP_nn},
+	0x32: {"LD (HL-),A", 8, Op_LDD_HL_A},
+	//0x36: {"LD (HL),d8", 12, Op_LD_HL_d8},
 	0x3E: {"LDAn", 8, Op_LDAn},
 	0x78: {"LDAB", 4, Op_LDAB},
 	0x7E: {"LDAHL", 8, Op_LD_A_HL},
@@ -47,7 +49,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xF3: {"DI  ", 4, Op_DI},
 	0xF5: {"PSaf", 16, Op_PUSH_AF},
 	0xFB: {"EI  ", 4, Op_EI},
-	0xFE: {"CPd8", 8, Op_CPd8},
+	0xFE: {"CP d8", 8, Op_CPd8},
 }
 
 func Cb_Disp(gb *GbCpu) {
@@ -56,7 +58,7 @@ func Cb_Disp(gb *GbCpu) {
 	case 0xBF:
 		Cb_ResetBit(0x07, &gb.Reg.A)
 	default:
-		panic(nil)
+		panic(fmt.Errorf("Unknown cb opcode: %02X", op))
 	}
 	gb.Reg.PC += 2
 }
@@ -83,14 +85,12 @@ func Op_CPd8(gb *GbCpu) {
 		gb.Reg.F |= FlagZ
 	}
 
-	fixmeSlowPrefixed := int8(gb.Reg.A&0xF) - int8(val&0xF)
-	if fixmeSlowPrefixed < 0 {
-		// (gb.Reg.A&0xF < val&0xF) ??
-		gb.Reg.F |= FlagH
-		panic(nil)
-	}
 	if gb.Reg.A < val {
 		gb.Reg.F |= FlagC
+	}
+
+	if (gb.Reg.A & 0x0F) < (val & 0x0F) {
+		gb.Reg.F |= FlagH
 	}
 
 	gb.Reg.PC += 2
@@ -147,8 +147,8 @@ func Op_PUSH_AF(gb *GbCpu) {
 
 func Op_POP_AF(gb *GbCpu) {
 	// fixme: is the order correct?
-	gb.Reg.A = gb.popFromStack()
 	gb.Reg.F = gb.popFromStack()
+	gb.Reg.A = gb.popFromStack()
 	gb.Reg.PC++
 }
 
@@ -234,6 +234,16 @@ func Op_LDI_HL_A(gb *GbCpu) {
 	val := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
 	gb.Mem.WriteByte(val, gb.Reg.A)
 	val++
+	gb.Reg.L = uint8(val & 0xFF)
+	gb.Reg.H = uint8((val >> 8 & 0xFF))
+	gb.Reg.PC++
+}
+
+// Put value of A into location specified by HL, decrement HL
+func Op_LDD_HL_A(gb *GbCpu) {
+	val := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	gb.Mem.WriteByte(val, gb.Reg.A)
+	val--
 	gb.Reg.L = uint8(val & 0xFF)
 	gb.Reg.H = uint8((val >> 8 & 0xFF))
 	gb.Reg.PC++
