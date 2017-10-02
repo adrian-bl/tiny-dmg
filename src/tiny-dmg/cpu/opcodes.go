@@ -32,17 +32,24 @@ var OpCodes = map[uint8]OpEntry{
 	0x2F: {"CPL", 4, Op_CPL},
 	0x31: {"LDSP", 12, Op_LD_SP_nn},
 	0x32: {"LD (HL-),A", 8, Op_LDD_HL_A},
+	0x33: {"INC SP", 8, func(gb *GbCpu) { gb.Reg.SP++; gb.Reg.PC++ }},
 	0x36: {"LD (HL),d8", 12, Op_LD_HL_d8},
 	0x3E: {"LDAn", 8, Op_LDAn},
+	0x57: {"LD D,A", 4, func(gb *GbCpu) { gb.Reg.D = gb.Reg.A; gb.Reg.PC++ }},
+	0x7A: {"LD A,D", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.D; gb.Reg.PC++ }},
+	0x77: {"LD (HL),A", 8, Op_LD_HL_A},
 	0x78: {"LDAB", 4, Op_LDAB},
 	0x7E: {"LDAHL", 8, Op_LD_A_HL},
+	0x87: {"ADD A,A", 4, func(gb *GbCpu) { Do_Add_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xAF: {"XOR A      ;", 4, func(gb *GbCpu) { Do_Xor_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xB1: {"ORAC", 4, Op_OrAC},
 	0xC3: {"JP  ", 16, Op_JP},
+	0xC5: {"PUSH BC", 16, Op_PUSH_BC},
 	0xC9: {"RET ", 16, Op_RET},
 	0xCD: {"CALn", 24, Op_CALL},
 	0xCB: {"CB! ", 12, Cb_Disp},  // fixme: cb takes 4 cycles + the code executed (mostly 8)
 	0xD0: {"RENC", 20, Op_RetNC}, // 20 or 8 ?!
+	0xD5: {"PUSH DE", 16, Op_PUSH_DE},
 	0xE0: {"LDHn", 12, Op_LDHnA},
 	0xE2: {"LD (C),A", 8, Op_LD_C_A},
 	0xE6: {"ANDa", 8, Op_ANDAn},
@@ -145,6 +152,18 @@ func Op_CALL(gb *GbCpu) {
 func Op_PUSH_AF(gb *GbCpu) {
 	gb.pushToStack(gb.Reg.A)
 	gb.pushToStack(gb.Reg.F)
+	gb.Reg.PC++
+}
+
+func Op_PUSH_BC(gb *GbCpu) {
+	gb.pushToStack(gb.Reg.B)
+	gb.pushToStack(gb.Reg.C)
+	gb.Reg.PC++
+}
+
+func Op_PUSH_DE(gb *GbCpu) {
+	gb.pushToStack(gb.Reg.D)
+	gb.pushToStack(gb.Reg.E)
 	gb.Reg.PC++
 }
 
@@ -268,6 +287,12 @@ func Op_LDD_HL_A(gb *GbCpu) {
 	val--
 	gb.Reg.L = uint8(val & 0xFF)
 	gb.Reg.H = uint8((val >> 8 & 0xFF))
+	gb.Reg.PC++
+}
+
+func Op_LD_HL_A(gb *GbCpu) {
+	val := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	gb.Mem.WriteByte(val, gb.Reg.A)
 	gb.Reg.PC++
 }
 

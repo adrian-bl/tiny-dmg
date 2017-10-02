@@ -78,3 +78,23 @@ func Do_Xor_88(gb *GbCpu, target *uint8, value uint8) {
 	}
 	gb.Reg.PC++
 }
+
+func Do_Add_88(gb *GbCpu, target *uint8, value uint8) {
+	gb.Reg.F &= ^FlagMask
+
+	result := uint16(*target) + uint16(value)
+	*target = uint8(result & 0xFF)
+
+	if (result & 0xFF00) != 0 {
+		gb.Reg.F |= FlagC
+	}
+	if *target == 0 {
+		gb.Reg.F |= FlagZ
+	}
+	if ((*target & 0x0F) + (value & 0x0F)) > 0x0F {
+		gb.Reg.F |= FlagH
+		fmt.Printf("Fixme? halfcarry?")
+	}
+
+	gb.Reg.PC++
+}
