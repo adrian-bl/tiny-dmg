@@ -67,22 +67,22 @@ func (gb *GbCpu) Boot() {
 
 		fmt.Printf("%04X %02X                        SP=%04X      BC=%02X%02X       DE=%02X%02X    ", gb.Reg.PC, op, gb.Reg.SP, gb.Reg.B, gb.Reg.C, gb.Reg.D, gb.Reg.E)
 		fmt.Printf("HL=%02X%02X    A=%02X F=%02X [", gb.Reg.H, gb.Reg.L, gb.Reg.A, gb.Reg.F)
-		if gb.Reg.F & FlagZ!=0{
+		if gb.Reg.F&FlagZ != 0 {
 			fmt.Printf("Z")
 		} else {
 			fmt.Printf("-")
 		}
-		if gb.Reg.F & FlagN!=0{
+		if gb.Reg.F&FlagN != 0 {
 			fmt.Printf("N")
 		} else {
 			fmt.Printf("-")
 		}
-		if gb.Reg.F & FlagH!=0{
+		if gb.Reg.F&FlagH != 0 {
 			fmt.Printf("H")
 		} else {
 			fmt.Printf("-")
 		}
-		if gb.Reg.F & FlagC!=0{
+		if gb.Reg.F&FlagC != 0 {
 			fmt.Printf("C")
 		} else {
 			fmt.Printf("-")

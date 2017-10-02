@@ -7,14 +7,16 @@ import (
 func Do_Inc_Uint8(gb *GbCpu, target *uint8) {
 	gb.Reg.F &= ^(FlagZ | FlagN | FlagH)
 	result := *target + 1
+
 	if result == 0 {
 		gb.Reg.F |= FlagZ
 	}
-	if (result^0x01^*target)&0x10 == 0x10 {
+
+	if (result & 0x0f) == 0x0f {
 		gb.Reg.F |= FlagH
-		fmt.Printf("HALF CARRY SHITLE!\n")
-		panic(nil)
+		fmt.Printf("-> HALF CARRY SET.")
 	}
+
 	*target = result
 	gb.Reg.PC++
 }

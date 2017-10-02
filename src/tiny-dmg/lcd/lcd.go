@@ -117,6 +117,7 @@ func (l *Lcd) Update(opCycles uint8) {
 			}
 		}
 	default:
+
 		panic(nil)
 	}
 	l.m.WriteRaw(RegLcdState, state)

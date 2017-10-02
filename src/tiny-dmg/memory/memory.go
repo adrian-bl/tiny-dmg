@@ -58,8 +58,8 @@ func (m *Memory) GetByte(addr uint16) byte {
 func (m *Memory) WriteByte(addr uint16, val byte) {
 
 	if addr < 0x8000 {
-		fmt.Printf("Write to readonly memory area?!\n")
-		panic(nil)
+		fmt.Printf("Ignoring bougous write of %X to %X (RO memory!)\n", val, addr)
+		return
 	}
 
 	if addr >= 0xE000 && (addr < 0xFE00) {
@@ -69,7 +69,7 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 
 	if (addr >= 0xFEA0) && (addr < 0xFEFF) {
 		fmt.Printf("Implement me 2\n")
-		panic(nil)
+		return
 	}
 
 	if 0xFF04 == addr {
