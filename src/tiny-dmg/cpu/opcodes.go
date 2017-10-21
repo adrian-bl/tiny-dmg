@@ -67,6 +67,8 @@ func Cb_Disp(gb *GbCpu) {
 	switch op {
 	case 0xBF:
 		Cb_ResetBit(0x07, &gb.Reg.A)
+	case 0x37:
+		Cb_SwapReg(&gb.Reg.F, &gb.Reg.A)
 	default:
 		panic(fmt.Errorf("Unknown cb opcode: %02X", op))
 	}
