@@ -24,6 +24,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x11: {"LDHL", 12, Op_LD_DE_nn},
 	0x12: {"LDnA", 8, Op_LD_n_A},
 	0x13: {"INC3", 8, func(gb *GbCpu) { Do_Inc_88(gb, &gb.Reg.D, &gb.Reg.E) }},
+	0x16: {"LD D, n    ;", 8, Op_LDDn},
 	0x18: {"JRn", 8, Op_JR_n},
 	0x20: {"JPNZ", 12, Op_JPnz}, // Fixme: This can be 12 or 8
 	0x21: {"LD HL,d16", 12, Op_LD_HL_nn},
@@ -38,6 +39,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x47: {"LD B,A", 4, func(gb *GbCpu) { gb.Reg.B = gb.Reg.A; gb.Reg.PC++ }},
 	0x4F: {"LD C,A", 4, func(gb *GbCpu) { gb.Reg.C = gb.Reg.A; gb.Reg.PC++ }},
 	0x57: {"LD D,A", 4, func(gb *GbCpu) { gb.Reg.D = gb.Reg.A; gb.Reg.PC++ }},
+	0x5F: {"LD E,A", 4, func(gb *GbCpu) { gb.Reg.E = gb.Reg.A; gb.Reg.PC++ }},
 	0x7A: {"LD A,D", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.D; gb.Reg.PC++ }},
 	0x77: {"LD (HL),A", 8, Op_LD_HL_A},
 	0x78: {"LD A,B", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.B; gb.Reg.PC++ }},
@@ -57,12 +59,13 @@ var OpCodes = map[uint8]OpEntry{
 	0xD0: {"RENC", 20, Op_RetNC}, // 20 or 8 ?!
 	0xD5: {"PUSH DE", 16, Op_PUSH_DE},
 	0xE0: {"LDHn", 12, Op_LDHnA},
+	0xE1: {"POP HL", 8, Op_POP_HL},
 	0xE2: {"LD (C),A", 8, Op_LD_C_A},
 	0xE6: {"ANDa", 8, Op_ANDAn},
 	0xEA: {"LD (a16),A", 16, Op_LD_a16_A},
 	0xEF: {"RST28", 8, Op_Rst28},
 	0xF0: {"LDHA", 12, Op_LDHAn}, //
-	0xF1: {"POP!", 12, Op_POP_AF},
+	0xF1: {"POP AF", 12, Op_POP_AF},
 	0xF3: {"DI  ", 4, Op_DI},
 	0xF5: {"PSaf", 16, Op_PUSH_AF},
 	0xFB: {"EI  ", 4, Op_EI},
@@ -147,6 +150,7 @@ func Op_LDHAn(gb *GbCpu) {
 }
 
 func Op_CALL(gb *GbCpu) {
+	// fixme: is the order correct?
 	spc := gb.Reg.PC + 3
 	gb.pushToStack(uint8(spc & 0xFF))
 	gb.pushToStack(uint8(spc >> 8 & 0xFF))
@@ -154,18 +158,21 @@ func Op_CALL(gb *GbCpu) {
 }
 
 func Op_PUSH_AF(gb *GbCpu) {
+	// fixme: is the order correct?
 	gb.pushToStack(gb.Reg.A)
 	gb.pushToStack(gb.Reg.F)
 	gb.Reg.PC++
 }
 
 func Op_PUSH_BC(gb *GbCpu) {
+	// fixme: is the order correct?
 	gb.pushToStack(gb.Reg.B)
 	gb.pushToStack(gb.Reg.C)
 	gb.Reg.PC++
 }
 
 func Op_PUSH_DE(gb *GbCpu) {
+	// fixme: is the order correct?
 	gb.pushToStack(gb.Reg.D)
 	gb.pushToStack(gb.Reg.E)
 	gb.Reg.PC++
@@ -173,8 +180,14 @@ func Op_PUSH_DE(gb *GbCpu) {
 
 func Op_POP_AF(gb *GbCpu) {
 	// fixme: is the order correct?
-	gb.Reg.F = gb.popFromStack()
 	gb.Reg.A = gb.popFromStack()
+	gb.Reg.F = gb.popFromStack()
+	gb.Reg.PC++
+}
+
+func Op_POP_HL(gb *GbCpu) {
+	gb.Reg.L = gb.popFromStack()
+	gb.Reg.H = gb.popFromStack()
 	gb.Reg.PC++
 }
 
@@ -205,6 +218,11 @@ func Op_LDBn(gb *GbCpu) {
 
 func Op_LDCn(gb *GbCpu) {
 	gb.Reg.C = gb.Mem.GetByte(gb.Reg.PC + 1)
+	gb.Reg.PC += 2
+}
+
+func Op_LDDn(gb *GbCpu) {
+	gb.Reg.D = gb.Mem.GetByte(gb.Reg.PC + 1)
 	gb.Reg.PC += 2
 }
 
