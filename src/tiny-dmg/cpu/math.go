@@ -67,6 +67,7 @@ func Do_And_88(gb *GbCpu, target *uint8, value uint8) {
 		gb.Reg.F |= FlagZ
 	}
 	*target = result
+	gb.Reg.PC++
 }
 
 func Do_Xor_88(gb *GbCpu, target *uint8, value uint8) {
@@ -97,4 +98,14 @@ func Do_Add_88(gb *GbCpu, target *uint8, value uint8) {
 	}
 
 	gb.Reg.PC++
+}
+
+func Do_Or_8(gb *GbCpu, target *uint8, value uint8) {
+	*target |= value
+	gb.Reg.PC++
+
+	gb.Reg.F &= ^FlagMask // clear all bits
+	if *target == 0 {
+		gb.Reg.F |= FlagZ
+	}
 }

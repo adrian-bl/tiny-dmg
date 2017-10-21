@@ -35,14 +35,20 @@ var OpCodes = map[uint8]OpEntry{
 	0x33: {"INC SP", 8, func(gb *GbCpu) { gb.Reg.SP++; gb.Reg.PC++ }},
 	0x36: {"LD (HL),d8", 12, Op_LD_HL_d8},
 	0x3E: {"LDAn", 8, Op_LDAn},
+	0x47: {"LD B,A", 4, func(gb *GbCpu) { gb.Reg.B = gb.Reg.A; gb.Reg.PC++ }},
+	0x4F: {"LD C,A", 4, func(gb *GbCpu) { gb.Reg.C = gb.Reg.A; gb.Reg.PC++ }},
 	0x57: {"LD D,A", 4, func(gb *GbCpu) { gb.Reg.D = gb.Reg.A; gb.Reg.PC++ }},
 	0x7A: {"LD A,D", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.D; gb.Reg.PC++ }},
 	0x77: {"LD (HL),A", 8, Op_LD_HL_A},
-	0x78: {"LDAB", 4, Op_LDAB},
+	0x78: {"LD A,B", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.B; gb.Reg.PC++ }},
+	0x79: {"LD A,C", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.C; gb.Reg.PC++ }},
 	0x7E: {"LDAHL", 8, Op_LD_A_HL},
 	0x87: {"ADD A,A", 4, func(gb *GbCpu) { Do_Add_88(gb, &gb.Reg.A, gb.Reg.A) }},
+	0xA1: {"AND C      ;", 8, func(gb *GbCpu) { Do_And_88(gb, &gb.Reg.A, gb.Reg.C) }},
+	0xA9: {"XOR C      ;", 4, func(gb *GbCpu) { Do_Xor_88(gb, &gb.Reg.A, gb.Reg.C) }},
 	0xAF: {"XOR A      ;", 4, func(gb *GbCpu) { Do_Xor_88(gb, &gb.Reg.A, gb.Reg.A) }},
-	0xB1: {"ORAC", 4, Op_OrAC},
+	0xB0: {"ORAB", 4, func(gb *GbCpu) { Do_Or_8(gb, &gb.Reg.A, gb.Reg.B) }},
+	0xB1: {"ORAC", 4, func(gb *GbCpu) { Do_Or_8(gb, &gb.Reg.A, gb.Reg.C) }},
 	0xC3: {"JP  ", 16, Op_JP},
 	0xC5: {"PUSH BC", 16, Op_PUSH_BC},
 	0xC9: {"RET ", 16, Op_RET},
@@ -54,6 +60,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xE2: {"LD (C),A", 8, Op_LD_C_A},
 	0xE6: {"ANDa", 8, Op_ANDAn},
 	0xEA: {"LD (a16),A", 16, Op_LD_a16_A},
+	0xEF: {"RST28", 8, Op_Rst28},
 	0xF0: {"LDHA", 12, Op_LDHAn}, //
 	0xF1: {"POP!", 12, Op_POP_AF},
 	0xF3: {"DI  ", 4, Op_DI},
@@ -132,11 +139,6 @@ func Op_RLCA(gb *GbCpu) {
 	}
 }
 
-func Op_LDAB(gb *GbCpu) {
-	gb.Reg.A = gb.Reg.B
-	gb.Reg.PC++
-}
-
 func Op_LDHAn(gb *GbCpu) {
 	src := uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + 0xFF00
 	gb.Reg.A = gb.Mem.GetByte(src)
@@ -176,21 +178,11 @@ func Op_POP_AF(gb *GbCpu) {
 	gb.Reg.PC++
 }
 
-func Op_OrAC(gb *GbCpu) {
-	gb.Reg.A |= gb.Reg.C
-	gb.Reg.PC++
-
-	gb.Reg.F &= ^FlagMask // clear all bits
-	if gb.Reg.A == 0 {
-		gb.Reg.F |= FlagZ
-	}
-}
-
 // 0xe6 AND A, n
 func Op_ANDAn(gb *GbCpu) {
 	val := gb.Mem.GetByte(gb.Reg.PC + 1)
 	Do_And_88(gb, &gb.Reg.A, val)
-	gb.Reg.PC += 2
+	gb.Reg.PC++ // +1 because we read one byte
 }
 
 func Op_LDHnA(gb *GbCpu) {
@@ -346,4 +338,12 @@ func Op_CPL(gb *GbCpu) {
 
 func Op_NOP(gb *GbCpu) {
 	gb.Reg.PC++
+}
+
+func Op_Rst28(gb *GbCpu) {
+	// Fixme: is this correct??
+	gb.Reg.PC++
+	gb.pushToStack(uint8(gb.Reg.PC >> 8 & 0xFF))
+	gb.pushToStack(uint8(gb.Reg.PC & 0xFF))
+	gb.Reg.PC = 0x28
 }
