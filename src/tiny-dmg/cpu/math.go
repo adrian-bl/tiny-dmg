@@ -80,6 +80,23 @@ func Do_Xor_88(gb *GbCpu, target *uint8, value uint8) {
 	gb.Reg.PC++
 }
 
+func Do_Add_1616(gb *GbCpu, target *uint16, value uint16) {
+	gb.Reg.F &= ^(FlagC | FlagH | FlagN) // Zero flag is not touched
+
+	result := uint32(*target) + uint32(value)
+	*target = uint16(result & 0xFFFF)
+
+	if (result & 0xFFFF0000) != 0 {
+		gb.Reg.F |= FlagC
+	}
+	// No Z flag
+	if ((*target & 0x0F) + (value & 0x0f)) > 0x0F {
+		gb.Reg.F |= FlagH
+	}
+
+	gb.Reg.PC++
+}
+
 func Do_Add_88(gb *GbCpu, target *uint8, value uint8) {
 	gb.Reg.F &= ^FlagMask
 

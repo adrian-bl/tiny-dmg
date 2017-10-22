@@ -26,9 +26,11 @@ var OpCodes = map[uint8]OpEntry{
 	0x13: {"INC3", 8, func(gb *GbCpu) { Do_Inc_88(gb, &gb.Reg.D, &gb.Reg.E) }},
 	0x16: {"LD D, n    ;", 8, Op_LDDn},
 	0x18: {"JRn", 8, Op_JR_n},
+	0x19: {"ADD HL,DE", 8, Op_ADD_HL_DE},
 	0x20: {"JPNZ", 12, Op_JPnz}, // Fixme: This can be 12 or 8
 	0x21: {"LD HL,d16", 12, Op_LD_HL_nn},
 	0x22: {"LD (HL+),A", 8, Op_LDI_HL_A},
+	0x23: {"INC HL", 8, func(gb *GbCpu) { Do_Inc_88(gb, &gb.Reg.H, &gb.Reg.L) }},
 	0x2A: {"LDA+", 8, Op_LD_A_HLi},
 	0x2F: {"CPL", 4, Op_CPL},
 	0x31: {"LDSP", 12, Op_LD_SP_nn},
@@ -38,13 +40,15 @@ var OpCodes = map[uint8]OpEntry{
 	0x3E: {"LDAn", 8, Op_LDAn},
 	0x47: {"LD B,A", 4, func(gb *GbCpu) { gb.Reg.B = gb.Reg.A; gb.Reg.PC++ }},
 	0x4F: {"LD C,A", 4, func(gb *GbCpu) { gb.Reg.C = gb.Reg.A; gb.Reg.PC++ }},
+	0x56: {"LD D,(HL)", 8, Op_LD_D_HL},
 	0x57: {"LD D,A", 4, func(gb *GbCpu) { gb.Reg.D = gb.Reg.A; gb.Reg.PC++ }},
+	0x5E: {"LD E,(HL)", 8, Op_LD_E_HL},
 	0x5F: {"LD E,A", 4, func(gb *GbCpu) { gb.Reg.E = gb.Reg.A; gb.Reg.PC++ }},
 	0x7A: {"LD A,D", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.D; gb.Reg.PC++ }},
 	0x77: {"LD (HL),A", 8, Op_LD_HL_A},
 	0x78: {"LD A,B", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.B; gb.Reg.PC++ }},
 	0x79: {"LD A,C", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.C; gb.Reg.PC++ }},
-	0x7E: {"LDAHL", 8, Op_LD_A_HL},
+	0x7E: {"LD A,(HL)", 8, Op_LD_A_HL},
 	0x87: {"ADD A,A", 4, func(gb *GbCpu) { Do_Add_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xA1: {"AND C      ;", 8, func(gb *GbCpu) { Do_And_88(gb, &gb.Reg.A, gb.Reg.C) }},
 	0xA9: {"XOR C      ;", 4, func(gb *GbCpu) { Do_Xor_88(gb, &gb.Reg.A, gb.Reg.C) }},
@@ -273,6 +277,18 @@ func Op_LD_A_HL(gb *GbCpu) {
 	gb.Reg.PC++
 }
 
+func Op_LD_D_HL(gb *GbCpu) {
+	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	gb.Reg.D = gb.Mem.GetByte(addr)
+	gb.Reg.PC++
+}
+
+func Op_LD_E_HL(gb *GbCpu) {
+	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	gb.Reg.E = gb.Mem.GetByte(addr)
+	gb.Reg.PC++
+}
+
 func Op_LD_A_HLi(gb *GbCpu) {
 	val := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
 	gb.Reg.A = gb.Mem.GetByte(val)
@@ -306,6 +322,15 @@ func Op_LD_HL_A(gb *GbCpu) {
 	val := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
 	gb.Mem.WriteByte(val, gb.Reg.A)
 	gb.Reg.PC++
+}
+
+func Op_ADD_HL_DE(gb *GbCpu) {
+	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	de := uint16(gb.Reg.D)<<8 + uint16(gb.Reg.E)
+	Do_Add_1616(gb, &hl, de)
+
+	gb.Reg.L = uint8(hl & 0xFF)
+	gb.Reg.H = uint8((hl >> 8 & 0xFF))
 }
 
 func Op_DI(gb *GbCpu) {
