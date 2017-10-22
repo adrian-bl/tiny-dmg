@@ -28,6 +28,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x18: {"JRn", 8, Op_JR_n},
 	0x19: {"ADD HL,DE", 8, Op_ADD_HL_DE},
 	0x1A: {"LD A, (DE)", 8, Op_LD_A_DE},
+	0x1C: {"INC E", 4, func(gb *GbCpu) { Do_Inc_Uint8(gb, &gb.Reg.E) }},
 	0x20: {"JPNZ", 12, Op_JPnz}, // Fixme: This can be 12 or 8
 	0x21: {"LD HL,d16", 12, Op_LD_HL_nn},
 	0x22: {"LD (HL+),A", 8, Op_LDI_HL_A},
@@ -54,6 +55,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x7E: {"LD A,(HL)", 8, Op_LD_A_HL},
 	0x87: {"ADD A,A", 4, func(gb *GbCpu) { Do_Add_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xA1: {"AND C      ;", 8, func(gb *GbCpu) { Do_And_88(gb, &gb.Reg.A, gb.Reg.C) }},
+	0xA7: {"AND A      ;", 8, func(gb *GbCpu) { Do_And_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xA9: {"XOR C      ;", 4, func(gb *GbCpu) { Do_Xor_88(gb, &gb.Reg.A, gb.Reg.C) }},
 	0xAF: {"XOR A      ;", 4, func(gb *GbCpu) { Do_Xor_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xB0: {"ORAB", 4, func(gb *GbCpu) { Do_Or_8(gb, &gb.Reg.A, gb.Reg.B) }},
