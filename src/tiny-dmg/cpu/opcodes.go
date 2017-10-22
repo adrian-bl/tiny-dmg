@@ -66,6 +66,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xE1: {"POP HL", 8, Op_POP_HL},
 	0xE2: {"LD (C),A", 8, Op_LD_C_A},
 	0xE6: {"ANDa", 8, Op_ANDAn},
+	0xE9: {"JP HL", 8, Op_JP_HL},
 	0xEA: {"LD (a16),A", 16, Op_LD_a16_A},
 	0xEF: {"RST28", 8, Op_Rst28},
 	0xF0: {"LDHA", 12, Op_LDHAn}, //
@@ -78,11 +79,15 @@ var OpCodes = map[uint8]OpEntry{
 
 func Cb_Disp(gb *GbCpu) {
 	op := gb.Mem.GetByte(gb.Reg.PC + 1)
+	fmt.Printf("-> CB %02X\n", op)
+
 	switch op {
 	case 0xBF:
 		Cb_ResetBit(0x07, &gb.Reg.A)
 	case 0x37:
 		Cb_SwapReg(&gb.Reg.F, &gb.Reg.A)
+	case 0x87:
+		Cb_RES(0, &gb.Reg.A)
 	default:
 		panic(fmt.Errorf("Unknown cb opcode: %02X", op))
 	}
@@ -91,6 +96,11 @@ func Cb_Disp(gb *GbCpu) {
 
 func Op_RET(gb *GbCpu) {
 	gb.Reg.PC = uint16(gb.popFromStack())<<8 + uint16(gb.popFromStack())
+}
+
+func Op_JP_HL(gb *GbCpu) {
+	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	gb.Reg.PC = hl
 }
 
 func Op_JPnz(gb *GbCpu) {

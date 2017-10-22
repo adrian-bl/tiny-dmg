@@ -13,3 +13,7 @@ func Cb_SwapReg(flags *uint8, target *uint8) {
 		*flags |= FlagZ
 	}
 }
+
+func Cb_RES(r uint8, target *uint8) {
+	*target &= ^(1 << r)
+}
