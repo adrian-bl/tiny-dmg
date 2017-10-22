@@ -27,10 +27,12 @@ var OpCodes = map[uint8]OpEntry{
 	0x16: {"LD D, n    ;", 8, Op_LDDn},
 	0x18: {"JRn", 8, Op_JR_n},
 	0x19: {"ADD HL,DE", 8, Op_ADD_HL_DE},
+	0x1A: {"LD A, (DE)", 8, Op_LD_A_DE},
 	0x20: {"JPNZ", 12, Op_JPnz}, // Fixme: This can be 12 or 8
 	0x21: {"LD HL,d16", 12, Op_LD_HL_nn},
 	0x22: {"LD (HL+),A", 8, Op_LDI_HL_A},
 	0x23: {"INC HL", 8, func(gb *GbCpu) { Do_Inc_88(gb, &gb.Reg.H, &gb.Reg.L) }},
+	0x28: {"JP Z", 12, Op_JPz},
 	0x2A: {"LDA+", 8, Op_LD_A_HLi},
 	0x2F: {"CPL", 4, Op_CPL},
 	0x31: {"LDSP", 12, Op_LD_SP_nn},
@@ -48,6 +50,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x77: {"LD (HL),A", 8, Op_LD_HL_A},
 	0x78: {"LD A,B", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.B; gb.Reg.PC++ }},
 	0x79: {"LD A,C", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.C; gb.Reg.PC++ }},
+	0x7C: {"LD A,H", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.H; gb.Reg.PC++ }},
 	0x7E: {"LD A,(HL)", 8, Op_LD_A_HL},
 	0x87: {"ADD A,A", 4, func(gb *GbCpu) { Do_Add_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xA1: {"AND C      ;", 8, func(gb *GbCpu) { Do_And_88(gb, &gb.Reg.A, gb.Reg.C) }},
@@ -61,10 +64,12 @@ var OpCodes = map[uint8]OpEntry{
 	0xCD: {"CALn", 24, Op_CALL},
 	0xCB: {"CB! ", 12, Cb_Disp},  // fixme: cb takes 4 cycles + the code executed (mostly 8)
 	0xD0: {"RENC", 20, Op_RetNC}, // 20 or 8 ?!
+	0xD1: {"POP DE", 16, Op_POP_DE},
 	0xD5: {"PUSH DE", 16, Op_PUSH_DE},
 	0xE0: {"LDHn", 12, Op_LDHnA},
 	0xE1: {"POP HL", 8, Op_POP_HL},
 	0xE2: {"LD (C),A", 8, Op_LD_C_A},
+	0xE5: {"PUSH HL", 16, Op_PUSH_HL},
 	0xE6: {"ANDa", 8, Op_ANDAn},
 	0xE9: {"JP HL", 8, Op_JP_HL},
 	0xEA: {"LD (a16),A", 16, Op_LD_a16_A},
@@ -72,7 +77,8 @@ var OpCodes = map[uint8]OpEntry{
 	0xF0: {"LDHA", 12, Op_LDHAn}, //
 	0xF1: {"POP AF", 12, Op_POP_AF},
 	0xF3: {"DI  ", 4, Op_DI},
-	0xF5: {"PSaf", 16, Op_PUSH_AF},
+	0xF5: {"PUSH AF", 16, Op_PUSH_AF},
+	0xFA: {"LD A, (a16)", 16, Op_LD_A_a16},
 	0xFB: {"EI  ", 4, Op_EI},
 	0xFE: {"CP d8", 8, Op_CPd8},
 }
@@ -105,6 +111,14 @@ func Op_JP_HL(gb *GbCpu) {
 
 func Op_JPnz(gb *GbCpu) {
 	if gb.Reg.F&FlagZ == 0 {
+		add := int8(gb.Mem.GetByte(gb.Reg.PC + 1))
+		gb.Reg.PC += uint16(add)
+	}
+	gb.Reg.PC += 2
+}
+
+func Op_JPz(gb *GbCpu) {
+	if gb.Reg.F&FlagZ != 0 {
 		add := int8(gb.Mem.GetByte(gb.Reg.PC + 1))
 		gb.Reg.PC += uint16(add)
 	}
@@ -192,6 +206,13 @@ func Op_PUSH_DE(gb *GbCpu) {
 	gb.Reg.PC++
 }
 
+func Op_PUSH_HL(gb *GbCpu) {
+	// fixme: is the order correct?
+	gb.pushToStack(gb.Reg.H)
+	gb.pushToStack(gb.Reg.L)
+	gb.Reg.PC++
+}
+
 func Op_POP_AF(gb *GbCpu) {
 	// fixme: is the order correct?
 	gb.Reg.A = gb.popFromStack()
@@ -202,6 +223,12 @@ func Op_POP_AF(gb *GbCpu) {
 func Op_POP_HL(gb *GbCpu) {
 	gb.Reg.L = gb.popFromStack()
 	gb.Reg.H = gb.popFromStack()
+	gb.Reg.PC++
+}
+
+func Op_POP_DE(gb *GbCpu) {
+	gb.Reg.D = gb.popFromStack()
+	gb.Reg.E = gb.popFromStack()
 	gb.Reg.PC++
 }
 
@@ -259,6 +286,12 @@ func Op_LD_C_A(gb *GbCpu) {
 	gb.Reg.PC++
 }
 
+func Op_LD_A_a16(gb *GbCpu) {
+	addr := uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + uint16(gb.Mem.GetByte(gb.Reg.PC+2))<<8
+	gb.Reg.A = gb.Mem.GetByte(addr)
+	gb.Reg.PC += 3
+}
+
 func Op_LD_a16_A(gb *GbCpu) {
 	addr := uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + uint16(gb.Mem.GetByte(gb.Reg.PC+2))<<8
 	gb.Mem.WriteByte(addr, gb.Reg.A)
@@ -296,6 +329,12 @@ func Op_LD_D_HL(gb *GbCpu) {
 func Op_LD_E_HL(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
 	gb.Reg.E = gb.Mem.GetByte(addr)
+	gb.Reg.PC++
+}
+
+func Op_LD_A_DE(gb *GbCpu) {
+	addr := uint16(gb.Reg.D)<<8 + uint16(gb.Reg.E)
+	gb.Reg.A = gb.Mem.GetByte(addr)
 	gb.Reg.PC++
 }
 
