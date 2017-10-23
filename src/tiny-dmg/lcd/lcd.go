@@ -76,8 +76,7 @@ func (l *Lcd) Update(opCycles uint8) {
 
 	l.cyclesCounter += int16(opCycles)
 
-	// FIXME: THIS IS A BITMASK: WE MUST TAKE AND SET 0xF
-	state := l.m.GetByte(RegLcdState)
+	state := l.m.GetByte(RegLcdState) & 0xF
 	switch state {
 	case GpuModeHblank:
 		if l.cyclesCounter >= CyclesHblank {
@@ -117,7 +116,6 @@ func (l *Lcd) Update(opCycles uint8) {
 			}
 		}
 	default:
-
 		panic(nil)
 	}
 	l.m.WriteRaw(RegLcdState, state)

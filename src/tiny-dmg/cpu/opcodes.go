@@ -33,6 +33,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x21: {"LD HL,d16", 12, Op_LD_HL_nn},
 	0x22: {"LD (HL+),A", 8, Op_LDI_HL_A},
 	0x23: {"INC HL", 8, func(gb *GbCpu) { Do_Inc_88(gb, &gb.Reg.H, &gb.Reg.L) }},
+	0x26: {"LD H,n", 8, Op_LD_H_n},
 	0x28: {"JP Z", 12, Op_JPz},
 	0x2A: {"LDA+", 8, Op_LD_A_HLi},
 	0x2F: {"CPL", 4, Op_CPL},
@@ -40,6 +41,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x32: {"LD (HL-),A", 8, Op_LDD_HL_A},
 	0x33: {"INC SP", 8, func(gb *GbCpu) { gb.Reg.SP++; gb.Reg.PC++ }},
 	0x36: {"LD (HL),d8", 12, Op_LD_HL_d8},
+	0x38: {"JR C N", 8, Op_JR_C_n},
 	0x3E: {"LDAn", 8, Op_LDAn},
 	0x47: {"LD B,A", 4, func(gb *GbCpu) { gb.Reg.B = gb.Reg.A; gb.Reg.PC++ }},
 	0x4F: {"LD C,A", 4, func(gb *GbCpu) { gb.Reg.C = gb.Reg.A; gb.Reg.PC++ }},
@@ -47,11 +49,14 @@ var OpCodes = map[uint8]OpEntry{
 	0x57: {"LD D,A", 4, func(gb *GbCpu) { gb.Reg.D = gb.Reg.A; gb.Reg.PC++ }},
 	0x5E: {"LD E,(HL)", 8, Op_LD_E_HL},
 	0x5F: {"LD E,A", 4, func(gb *GbCpu) { gb.Reg.E = gb.Reg.A; gb.Reg.PC++ }},
-	0x7A: {"LD A,D", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.D; gb.Reg.PC++ }},
+	0x6F: {"LD L,A", 4, func(gb *GbCpu) { gb.Reg.L = gb.Reg.A; gb.Reg.PC++ }},
 	0x77: {"LD (HL),A", 8, Op_LD_HL_A},
 	0x78: {"LD A,B", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.B; gb.Reg.PC++ }},
 	0x79: {"LD A,C", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.C; gb.Reg.PC++ }},
+	0x7A: {"LD A,D", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.D; gb.Reg.PC++ }},
+	0x7B: {"LD A,E", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.E; gb.Reg.PC++ }},
 	0x7C: {"LD A,H", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.H; gb.Reg.PC++ }},
+	0x7D: {"LD A,L", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.L; gb.Reg.PC++ }},
 	0x7E: {"LD A,(HL)", 8, Op_LD_A_HL},
 	0x87: {"ADD A,A", 4, func(gb *GbCpu) { Do_Add_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xA1: {"AND C      ;", 8, func(gb *GbCpu) { Do_And_88(gb, &gb.Reg.A, gb.Reg.C) }},
@@ -333,6 +338,11 @@ func Op_LD_a16_A(gb *GbCpu) {
 	fmt.Printf("LD %X -> %X\n", addr, gb.Reg.A)
 }
 
+func Op_LD_H_n(gb *GbCpu) {
+	gb.Reg.H = gb.Mem.GetByte(gb.Reg.PC + 1)
+	gb.Reg.PC += 2
+}
+
 func Op_LD_HL_nn(gb *GbCpu) {
 	Do_Load_88(gb, &gb.Reg.L, &gb.Reg.H)
 }
@@ -436,6 +446,15 @@ func Op_JR_n(gb *GbCpu) {
 	add := int8(gb.Mem.GetByte(gb.Reg.PC + 1))
 	gb.Reg.PC += 2 + uint16(add)
 }
+
+func Op_JR_C_n(gb *GbCpu) {
+	if gb.Reg.F & FlagH != 0 {
+		add := int8(gb.Mem.GetByte(gb.Reg.PC + 1))
+		gb.Reg.PC += uint16(add)
+	}
+	gb.Reg.PC += 2
+}
+
 
 func Op_CPL(gb *GbCpu) {
 	gb.Reg.F |= (FlagN | FlagH) // N and H are always set
