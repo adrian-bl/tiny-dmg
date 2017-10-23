@@ -60,9 +60,12 @@ var OpCodes = map[uint8]OpEntry{
 	0xAF: {"XOR A      ;", 4, func(gb *GbCpu) { Do_Xor_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xB0: {"ORAB", 4, func(gb *GbCpu) { Do_Or_8(gb, &gb.Reg.A, gb.Reg.B) }},
 	0xB1: {"ORAC", 4, func(gb *GbCpu) { Do_Or_8(gb, &gb.Reg.A, gb.Reg.C) }},
+	0xC1: {"POP BC", 16, Op_POP_BC},
 	0xC3: {"JP  ", 16, Op_JP},
 	0xC5: {"PUSH BC", 16, Op_PUSH_BC},
+	0xC8: {"RET Z", 20, Op_RET_Z},
 	0xC9: {"RET ", 16, Op_RET},
+	0xCA: {"JP Z NN", 16, Op_JP_Z_NN},
 	0xCD: {"CALn", 24, Op_CALL},
 	0xCB: {"CB! ", 12, Cb_Disp},  // fixme: cb takes 4 cycles + the code executed (mostly 8)
 	0xD0: {"RENC", 20, Op_RetNC}, // 20 or 8 ?!
@@ -83,6 +86,11 @@ var OpCodes = map[uint8]OpEntry{
 	0xFA: {"LD A, (a16)", 16, Op_LD_A_a16},
 	0xFB: {"EI  ", 4, Op_EI},
 	0xFE: {"CP d8", 8, Op_CPd8},
+}
+
+func (gb *GbCpu) crash() {
+	fmt.Printf(">>> crashing at pc=%X\n", gb.Reg.PC)
+	panic(nil)
 }
 
 func Cb_Disp(gb *GbCpu) {
@@ -106,6 +114,14 @@ func Op_RET(gb *GbCpu) {
 	gb.Reg.PC = uint16(gb.popFromStack())<<8 + uint16(gb.popFromStack())
 }
 
+func Op_RET_Z(gb *GbCpu) {
+	if gb.Reg.F&FlagZ != 0 {
+		gb.Reg.PC = uint16(gb.popFromStack())<<8 + uint16(gb.popFromStack())
+	} else {
+		gb.crash()
+	}
+}
+
 func Op_JP_HL(gb *GbCpu) {
 	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
 	gb.Reg.PC = hl
@@ -125,6 +141,15 @@ func Op_JPz(gb *GbCpu) {
 		gb.Reg.PC += uint16(add)
 	}
 	gb.Reg.PC += 2
+}
+
+func Op_JP_Z_NN(gb *GbCpu) {
+	if gb.Reg.F&FlagZ != 0 {
+		addr := uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + uint16(gb.Mem.GetByte(gb.Reg.PC+2))<<8
+		gb.Reg.PC = addr
+		gb.crash()
+	}
+	gb.Reg.PC += 3
 }
 
 func Op_CPd8(gb *GbCpu) {
@@ -219,6 +244,13 @@ func Op_POP_AF(gb *GbCpu) {
 	// fixme: is the order correct?
 	gb.Reg.A = gb.popFromStack()
 	gb.Reg.F = gb.popFromStack()
+	gb.Reg.PC++
+}
+
+func Op_POP_BC(gb *GbCpu) {
+	// fixme: is the order correct?
+	gb.Reg.B = gb.popFromStack()
+	gb.Reg.C = gb.popFromStack()
 	gb.Reg.PC++
 }
 
@@ -401,27 +433,8 @@ func Op_JP(gb *GbCpu) {
 }
 
 func Op_JR_n(gb *GbCpu) {
-
-	//if (gb.Reg.PC == 0x09A3) {
-	fmt.Printf("FETCH: %d", gb.Mem.GetByte(gb.Reg.PC+1))
-	gb.Reg.PC += 2 + uint16(gb.Mem.GetByte(gb.Reg.PC+1))
-	fmt.Printf(" -> JUMP TO %X\n", gb.Reg.PC)
-	if gb.Reg.PC != 0x84 && gb.Reg.PC != 0x9A && gb.Reg.PC != 0xB0 {
-		panic(nil)
-		/*
-		   func (c *CPU) relativeJump(dist uint8) {
-		   	c.PC = signedAdd(c.PC, dist)
-		   }
-
-		   func signedAdd(a uint16, b uint8) uint16 {
-		   	bSigned := int8(b)
-		   	if bSigned >= 0 {
-		   		return a + uint16(bSigned)
-		   	} else {
-		   		return a - uint16(-bSigned)
-		   	}
-		   }*/
-	}
+	add := int8(gb.Mem.GetByte(gb.Reg.PC + 1))
+	gb.Reg.PC += 2 + uint16(add)
 }
 
 func Op_CPL(gb *GbCpu) {
