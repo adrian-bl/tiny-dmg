@@ -6,6 +6,7 @@ import (
 	"tiny-dmg/lcd"
 	"tiny-dmg/memory"
 	"tiny-dmg/rom"
+	"tiny-dmg/ui"
 )
 
 func main() {
@@ -25,6 +26,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	go ui.Run(m)
 
 	fmt.Printf("Assembling machine...")
 	gb, err := cpu.New(m, l)
