@@ -103,13 +103,12 @@ func (gb *GbCpu) Boot() {
 func (gb *GbCpu) pushToStack(b byte) {
 	gb.Reg.SP--
 	gb.Mem.WriteByte(gb.Reg.SP, b)
-	//gb.Ram[gb.Reg.SP] = b
-	fmt.Printf("STACK WRITE: %02X\n", b)
+	fmt.Printf("STACK WRITE: %02X @%X\n", b, gb.Reg.SP)
 }
 
 func (gb *GbCpu) popFromStack() byte {
 	b := gb.Mem.GetByte(gb.Reg.SP)
+	fmt.Printf("STACK READ: %02X @%X\n", b, gb.Reg.SP)
 	gb.Reg.SP++
-	fmt.Printf("STACK READ: %02X\n", b)
 	return b
 }

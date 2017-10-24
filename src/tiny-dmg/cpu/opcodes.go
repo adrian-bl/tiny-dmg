@@ -116,13 +116,14 @@ func Cb_Disp(gb *GbCpu) {
 }
 
 func Op_RET(gb *GbCpu) {
-	gb.Reg.PC = uint16(gb.popFromStack())<<8 + uint16(gb.popFromStack())
+	gb.Reg.PC = uint16(gb.popFromStack()) + uint16(gb.popFromStack())<<8
 }
 
 func Op_RET_Z(gb *GbCpu) {
 	if gb.Reg.F&FlagZ != 0 {
-		gb.Reg.PC = uint16(gb.popFromStack())<<8 + uint16(gb.popFromStack())
+		gb.Reg.PC = uint16(gb.popFromStack()) + uint16(gb.popFromStack())<<8
 	} else {
+		// inc pc++?
 		gb.crash()
 	}
 }
@@ -210,52 +211,45 @@ func Op_LDHAn(gb *GbCpu) {
 }
 
 func Op_CALL(gb *GbCpu) {
-	// fixme: is the order correct?
 	spc := gb.Reg.PC + 3
-	gb.pushToStack(uint8(spc & 0xFF))
 	gb.pushToStack(uint8(spc >> 8 & 0xFF))
+	gb.pushToStack(uint8(spc & 0xFF))
 	Op_JP(gb)
 }
 
 func Op_PUSH_AF(gb *GbCpu) {
-	// fixme: is the order correct?
 	gb.pushToStack(gb.Reg.A)
 	gb.pushToStack(gb.Reg.F)
 	gb.Reg.PC++
 }
 
 func Op_PUSH_BC(gb *GbCpu) {
-	// fixme: is the order correct?
 	gb.pushToStack(gb.Reg.B)
 	gb.pushToStack(gb.Reg.C)
 	gb.Reg.PC++
 }
 
 func Op_PUSH_DE(gb *GbCpu) {
-	// fixme: is the order correct?
 	gb.pushToStack(gb.Reg.D)
 	gb.pushToStack(gb.Reg.E)
 	gb.Reg.PC++
 }
 
 func Op_PUSH_HL(gb *GbCpu) {
-	// fixme: is the order correct?
 	gb.pushToStack(gb.Reg.H)
 	gb.pushToStack(gb.Reg.L)
 	gb.Reg.PC++
 }
 
 func Op_POP_AF(gb *GbCpu) {
-	// fixme: is the order correct?
-	gb.Reg.A = gb.popFromStack()
 	gb.Reg.F = gb.popFromStack()
+	gb.Reg.A = gb.popFromStack()
 	gb.Reg.PC++
 }
 
 func Op_POP_BC(gb *GbCpu) {
-	// fixme: is the order correct?
-	gb.Reg.B = gb.popFromStack()
 	gb.Reg.C = gb.popFromStack()
+	gb.Reg.B = gb.popFromStack()
 	gb.Reg.PC++
 }
 
@@ -266,8 +260,8 @@ func Op_POP_HL(gb *GbCpu) {
 }
 
 func Op_POP_DE(gb *GbCpu) {
-	gb.Reg.D = gb.popFromStack()
 	gb.Reg.E = gb.popFromStack()
+	gb.Reg.D = gb.popFromStack()
 	gb.Reg.PC++
 }
 
@@ -448,13 +442,12 @@ func Op_JR_n(gb *GbCpu) {
 }
 
 func Op_JR_C_n(gb *GbCpu) {
-	if gb.Reg.F & FlagH != 0 {
+	if gb.Reg.F&FlagH != 0 {
 		add := int8(gb.Mem.GetByte(gb.Reg.PC + 1))
 		gb.Reg.PC += uint16(add)
 	}
 	gb.Reg.PC += 2
 }
-
 
 func Op_CPL(gb *GbCpu) {
 	gb.Reg.F |= (FlagN | FlagH) // N and H are always set
@@ -467,7 +460,6 @@ func Op_NOP(gb *GbCpu) {
 }
 
 func Op_Rst28(gb *GbCpu) {
-	// Fixme: is this correct??
 	gb.Reg.PC++
 	gb.pushToStack(uint8(gb.Reg.PC >> 8 & 0xFF))
 	gb.pushToStack(uint8(gb.Reg.PC & 0xFF))
