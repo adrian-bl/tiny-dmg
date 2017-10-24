@@ -12,17 +12,72 @@ import (
 	"tiny-dmg/memory"
 )
 
+const (
+	width = 160
+	height = 144
+)
+
 func Run(m *memory.Memory) {
-	go loop(m)
+	//go loop(m)
+	go mapView(m, 0x9800)
+	go mapView(m, 0x9C00)
+	go tileView(m)
 	wde.Run()
 	log.Panic("wde run exited!")
+}
+
+// mapView displays a tilemap
+func mapView(m *memory.Memory, memoff int) {
+	dw, err := wde.NewWindow(width, height)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	dw.SetTitle(fmt.Sprintf("MAP:%X - tinydmg!", memoff))
+	dw.SetSize(width, height)
+	dw.Show()
+
+	s := dw.Screen()
+	for {
+		for i := 0 ; i < 1024 ; i++ {
+			taddr := 0x8000 + uint16(m.GetByte(uint16(i+memoff))) * 16
+			x := i % 32
+			y := i / 32
+			drawTile(s, m, taddr, x*8, y*8)
+		}
+		dw.FlushImage()
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+// tileView dumps all tiles
+func tileView(m *memory.Memory) {
+	dw, err := wde.NewWindow(width, height)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	dw.SetTitle("tiny-dmg! [tiles]")
+	dw.SetSize(width, height)
+	dw.Show()
+
+	s := dw.Screen()
+	// vram is $8000-$97FF, each tile is 8x8 -> 16 bytes
+	for {
+		for i := 0; i < 360; i++ {
+			p := uint16(i*0x10 + 0x8000)
+			x := (i % 20) * 8
+			y := (i / 20) * 8
+			drawTile(s, m, p, x, y)
+		}
+		dw.FlushImage()
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 func loop(m *memory.Memory) {
 	var wg sync.WaitGroup
 
-	width := 160
-	height := 144
 
 	x := func() {
 		dw, err := wde.NewWindow(width, height)
