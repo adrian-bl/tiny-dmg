@@ -36,10 +36,12 @@ var OpCodes = map[uint8]OpEntry{
 	0x26: {"LD H,n", 8, Op_LD_H_n},
 	0x28: {"JP Z", 12, Op_JPz},
 	0x2A: {"LDA+", 8, Op_LD_A_HLi},
+	0x2C: {"INC L", 4, func(gb *GbCpu) { Do_Inc_Uint8(gb, &gb.Reg.L) }},
 	0x2F: {"CPL", 4, Op_CPL},
 	0x31: {"LDSP", 12, Op_LD_SP_nn},
 	0x32: {"LD (HL-),A", 8, Op_LDD_HL_A},
 	0x33: {"INC SP", 8, func(gb *GbCpu) { gb.Reg.SP++; gb.Reg.PC++ }},
+	0x35: {"DEC (HL)", 8, Op_DEC_HL},
 	0x36: {"LD (HL),d8", 12, Op_LD_HL_d8},
 	0x38: {"JR C N", 8, Op_JR_C_n},
 	0x3E: {"LDAn", 8, Op_LDAn},
@@ -123,7 +125,7 @@ func Op_RET_Z(gb *GbCpu) {
 	if gb.Reg.F&FlagZ != 0 {
 		gb.Reg.PC = uint16(gb.popFromStack()) + uint16(gb.popFromStack())<<8
 	} else {
-		// inc pc++?
+		gb.Reg.PC++
 		gb.crash()
 	}
 }
@@ -153,9 +155,11 @@ func Op_JP_Z_NN(gb *GbCpu) {
 	if gb.Reg.F&FlagZ != 0 {
 		addr := uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + uint16(gb.Mem.GetByte(gb.Reg.PC+2))<<8
 		gb.Reg.PC = addr
+		fmt.Printf("JP_Z_NN = %X -> is this correct?\n", gb.Reg.PC)
 		gb.crash()
+	} else {
+		gb.Reg.PC += 3
 	}
-	gb.Reg.PC += 3
 }
 
 func Op_CPd8(gb *GbCpu) {
@@ -265,6 +269,13 @@ func Op_POP_DE(gb *GbCpu) {
 	gb.Reg.PC++
 }
 
+func Op_DEC_HL(gb *GbCpu) {
+	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	val := gb.Mem.GetByte(addr)
+	Do_Dec_Uint8(gb, &val)
+	gb.Mem.WriteByte(addr, val)
+}
+
 // 0xe6 AND A, n
 func Op_ANDAn(gb *GbCpu) {
 	val := gb.Mem.GetByte(gb.Reg.PC + 1)
@@ -275,9 +286,10 @@ func Op_ANDAn(gb *GbCpu) {
 func Op_LDHnA(gb *GbCpu) {
 	dst := uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + 0xFF00
 
+	old := gb.Mem.GetByte(dst)
 	gb.Mem.WriteByte(dst, gb.Reg.A)
 	gb.Reg.PC += 2
-	fmt.Printf("WROTE %04X to %04X\n", gb.Mem.GetByte(dst), dst)
+	fmt.Printf("WROTE %04X to %04X, it was %04X\n", gb.Mem.GetByte(dst), dst, old)
 }
 
 func Op_LDAn(gb *GbCpu) {

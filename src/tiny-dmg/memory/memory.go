@@ -72,6 +72,21 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 		return
 	}
 
+	if 0xFF00 == addr {
+		switch val {
+		case 0x10:
+			val = 0xDF
+		case 0x20:
+			val = 0xEF
+		case 0x30:
+			val = 0xFF
+		default:
+			fmt.Printf("Unexpected! %X\n", val)
+			panic(nil)
+		}
+		fmt.Printf("Write to joypad reg, faking write to be: %X\n", val)
+	}
+
 	if 0xFF04 == addr {
 		fmt.Printf("Write to divider register!\n")
 		panic(nil)
