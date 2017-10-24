@@ -2,6 +2,7 @@ package cpu
 
 import (
 	"fmt"
+	"time"
 	"tiny-dmg/lcd"
 	"tiny-dmg/memory"
 )
@@ -90,6 +91,13 @@ func (gb *GbCpu) Boot() {
 
 		fmt.Printf("]  op=%-18s, c=%d ## %d, c=%d, ff44 = %X, >> FIXME: STAT = %X, LCDC=%02X\n", gb.OpCode.Name, gb.OpCode.Cycles, i, gb.Cycles, gb.Mem.GetByte(0xFF44), gb.Mem.GetByte(0xFF41), gb.Mem.GetByte(0xFF40))
 		i++
+
+		if gb.OpCode.Cback == nil {
+			for {
+				fmt.Printf("BREAKPOINT HIT AT %X -> WE ARE HANGING HERE....\n", gb.Reg.PC)
+				time.Sleep(100 * time.Second)
+			}
+		}
 
 		gb.OpCode.Cback(gb)
 		gb.Cycles += uint32(gb.OpCode.Cycles)

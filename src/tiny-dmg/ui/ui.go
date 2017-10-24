@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	width = 160
+	width  = 160
 	height = 144
 )
 
@@ -39,8 +39,8 @@ func mapView(m *memory.Memory, memoff int) {
 
 	s := dw.Screen()
 	for {
-		for i := 0 ; i < 1024 ; i++ {
-			taddr := 0x8000 + uint16(m.GetByte(uint16(i+memoff))) * 16
+		for i := 0; i < 1024; i++ {
+			taddr := 0x8000 + uint16(m.GetByte(uint16(i+memoff)))*16
 			x := i % 32
 			y := i / 32
 			drawTile(s, m, taddr, x*8, y*8)
@@ -77,7 +77,6 @@ func tileView(m *memory.Memory) {
 
 func loop(m *memory.Memory) {
 	var wg sync.WaitGroup
-
 
 	x := func() {
 		dw, err := wde.NewWindow(width, height)

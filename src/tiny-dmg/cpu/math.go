@@ -119,10 +119,32 @@ func Do_Add_88(gb *GbCpu, target *uint8, value uint8) {
 
 func Do_Or_8(gb *GbCpu, target *uint8, value uint8) {
 	*target |= value
-	gb.Reg.PC++
 
 	gb.Reg.F &= ^FlagMask // clear all bits
 	if *target == 0 {
 		gb.Reg.F |= FlagZ
 	}
+
+	gb.Reg.PC++
+}
+
+func Do_Sub_8(gb *GbCpu, target *uint8, value uint8) {
+	gb.Reg.F &= ^FlagMask // clear all bits
+	gb.Reg.F |= FlagN
+
+	if value > *target {
+		gb.Reg.F |= FlagC
+	}
+
+	if (value & 0x0f) > (*target & 0x0f) {
+		gb.Reg.F |= FlagH
+	}
+
+	*target -= value
+
+	if *target == 0 {
+		gb.Reg.F |= FlagZ
+	}
+
+	gb.Reg.PC++
 }
