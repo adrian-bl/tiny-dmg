@@ -191,3 +191,20 @@ func Do_Sbc_88(gb *GbCpu, target *uint8, value uint8) {
 	*target -= value
 	gb.Reg.PC++
 }
+
+func Do_Cp(gb *GbCpu, a, b uint8) {
+	gb.Reg.F &= ^FlagMask
+
+	if a == b {
+		gb.Reg.F |= FlagZ
+	}
+	if b > a {
+		gb.Reg.F |= FlagC
+	}
+	if ((b & 0x0F) > (a & 0x0F)) {
+		gb.Reg.F |= FlagH
+	}
+
+	gb.Reg.F |= FlagN
+	gb.Reg.PC++
+}

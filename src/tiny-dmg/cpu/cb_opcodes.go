@@ -13,10 +13,44 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_rl(gb, &gb.Reg.C, gb.Reg.C)
 	case 0x27:
 		Cb_sla(gb, &gb.Reg.A)
+	case 0x33:
+		Cb_SwapReg(&gb.Reg.F, &gb.Reg.E)
+	case 0x34:
+		Cb_SwapReg(&gb.Reg.F, &gb.Reg.H)
+	case 0x35:
+		Cb_SwapReg(&gb.Reg.F, &gb.Reg.L)
 	case 0x37:
 		Cb_SwapReg(&gb.Reg.F, &gb.Reg.A)
 	case 0x3F:
 		Cb_srl(gb, &gb.Reg.A, gb.Reg.A)
+	case 0x40:
+		Cb_checkBit(gb, 0x00, gb.Reg.B)
+	case 0x41:
+		Cb_checkBit(gb, 0x00, gb.Reg.C)
+	case 0x42:
+		Cb_checkBit(gb, 0x00, gb.Reg.D)
+	case 0x43:
+		Cb_checkBit(gb, 0x00, gb.Reg.E)
+	case 0x44:
+		Cb_checkBit(gb, 0x00, gb.Reg.H)
+	case 0x45:
+		Cb_checkBit(gb, 0x00, gb.Reg.L)
+	case 0x48:
+		Cb_checkBit(gb, 0x01, gb.Reg.B)
+	case 0x49:
+		Cb_checkBit(gb, 0x01, gb.Reg.C)
+	case 0x4A:
+		Cb_checkBit(gb, 0x01, gb.Reg.D)
+	case 0x4B:
+		Cb_checkBit(gb, 0x01, gb.Reg.E)
+	case 0x4C:
+		Cb_checkBit(gb, 0x01, gb.Reg.H)
+	case 0x4D:
+		Cb_checkBit(gb, 0x01, gb.Reg.L)
+	case 0x4E:
+		Cb_checkBitn(gb, 0x01, gb.Reg.H, gb.Reg.L)
+	case 0x4F:
+		Cb_checkBit(gb, 0x01, gb.Reg.A)
 	case 0x50:
 		Cb_checkBit(gb, 0x02, gb.Reg.B)
 	case 0x51:
@@ -43,6 +77,18 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_checkBit(gb, 0x03, gb.Reg.L)
 	case 0x5F:
 		Cb_checkBit(gb, 0x03, gb.Reg.A)
+	case 0x60:
+		Cb_checkBit(gb, 0x04, gb.Reg.B)
+	case 0x61:
+		Cb_checkBit(gb, 0x04, gb.Reg.C)
+	case 0x62:
+		Cb_checkBit(gb, 0x04, gb.Reg.D)
+	case 0x63:
+		Cb_checkBit(gb, 0x04, gb.Reg.E)
+	case 0x64:
+		Cb_checkBit(gb, 0x04, gb.Reg.H)
+	case 0x65:
+		Cb_checkBit(gb, 0x04, gb.Reg.L)
 	case 0x68:
 		Cb_checkBit(gb, 0x05, gb.Reg.B)
 	case 0x69:
@@ -83,10 +129,14 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_checkBit(gb, 0x07, gb.Reg.H)
 	case 0x7D:
 		Cb_checkBit(gb, 0x07, gb.Reg.L)
+	case 0x7E:
+		Cb_checkBitn(gb, 0x07, gb.Reg.H, gb.Reg.L)
 	case 0x7F:
 		Cb_checkBit(gb, 0x07, gb.Reg.A)
 	case 0x87:
 		Cb_ResetBit(0x00, &gb.Reg.A)
+	case 0x86:
+		Cb_res_16(gb, 0x00, gb.Reg.H, gb.Reg.L)
 	case 0xBE:
 		Cb_res_16(gb, 0x07, gb.Reg.H, gb.Reg.L)
 	case 0xDE:
@@ -153,6 +203,12 @@ func Cb_sla(gb *GbCpu, target *uint8) {
 	if *target == 0 {
 		gb.Reg.F |= FlagZ
 	}
+}
+
+func Cb_checkBitn(gb *GbCpu, bit, h, l uint8) {
+	addr := uint16(h)<<8 + uint16(l)
+	val := uint8(gb.Mem.GetByte(addr))
+	Cb_checkBit(gb, bit, val)
 }
 
 func Cb_checkBit(gb *GbCpu, bit uint8, value uint8) {
