@@ -117,7 +117,7 @@ func Do_Add_88(gb *GbCpu, target *uint8, value uint8) {
 	gb.Reg.PC++
 }
 
-func Do_Or_8(gb *GbCpu, target *uint8, value uint8) {
+func Do_Or_88(gb *GbCpu, target *uint8, value uint8) {
 	*target |= value
 
 	gb.Reg.F &= ^FlagMask // clear all bits
@@ -128,7 +128,7 @@ func Do_Or_8(gb *GbCpu, target *uint8, value uint8) {
 	gb.Reg.PC++
 }
 
-func Do_Sub_8(gb *GbCpu, target *uint8, value uint8) {
+func Do_Sub_88(gb *GbCpu, target *uint8, value uint8) {
 	gb.Reg.F &= ^FlagMask // clear all bits
 	gb.Reg.F |= FlagN
 
@@ -146,5 +146,48 @@ func Do_Sub_8(gb *GbCpu, target *uint8, value uint8) {
 		gb.Reg.F |= FlagZ
 	}
 
+	gb.Reg.PC++
+}
+
+func Do_Adc_88(gb *GbCpu, target *uint8, value uint8) {
+	if gb.Reg.F & FlagC != 0 {
+		value++
+	}
+
+	result := uint16(*target) + uint16(value)
+
+	gb.Reg.F &= ^FlagMask
+	if result & 0xFF00 != 0 {
+		gb.Reg.F |= FlagH
+	}
+	if value == *target {
+		gb.Reg.F |= FlagZ
+	}
+	if ((*target & 0x0F) + (value & 0x0F)) > 0x0F {
+		gb.Reg.F |= FlagH
+	}
+
+	*target = uint8(result & 0xFF)
+	gb.Reg.PC++
+}
+
+func Do_Sbc_88(gb *GbCpu, target *uint8, value uint8) {
+	if gb.Reg.F & FlagC != 0 {
+		value++
+	}
+
+	gb.Reg.F &= ^FlagMask
+	gb.Reg.F |= FlagN
+	if value > *target {
+		gb.Reg.F |= FlagC
+	}
+	if value == *target {
+		gb.Reg.F |= FlagZ
+	}
+	if ((*target & 0x0F) + (value & 0x0F)) > 0x0F {
+		gb.Reg.F |= FlagH
+	}
+
+	*target -= value
 	gb.Reg.PC++
 }

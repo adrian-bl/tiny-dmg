@@ -26,7 +26,9 @@ var OpCodes = map[uint8]OpEntry{
 	0x0E: {"LD C, n    ;", 8, Op_LDCn},
 	0x11: {"LDHL", 12, Op_LD_DE_nn},
 	0x12: {"LDnA", 8, Op_LD_n_A},
-	0x13: {"INC3", 8, func(gb *GbCpu) { Do_Inc_88(gb, &gb.Reg.D, &gb.Reg.E) }},
+	0x13: {"INC DE", 8, func(gb *GbCpu) { Do_Inc_88(gb, &gb.Reg.D, &gb.Reg.E) }},
+	0x14: {"INC D", 4, func(gb *GbCpu) { Do_Inc_Uint8(gb, &gb.Reg.D) }},
+	0x15: {"DEC D", 4, func(gb *GbCpu) { Do_Dec_Uint8(gb, &gb.Reg.D) }},
 	0x16: {"LD D, n    ;", 8, Op_LDDn},
 	0x17: {"RL A", 8, func(gb *GbCpu) { Cb_rl(gb, &gb.Reg.A, gb.Reg.A); gb.Reg.PC++ }},
 	0x18: {"JRn", 8, Op_JR_n},
@@ -41,6 +43,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x23: {"INC HL", 8, func(gb *GbCpu) { Do_Inc_88(gb, &gb.Reg.H, &gb.Reg.L) }},
 	0x24: {"INC H", 4, func(gb *GbCpu) { Do_Inc_Uint8(gb, &gb.Reg.H) }},
 	0x26: {"LD H,n", 8, Op_LD_H_n},
+	0x27: {"DAA", 8, Op_DAA},
 	0x28: {"JP Z", 12, Op_JPz},
 	0x29: {"ADD HL, HL", 4, Op_ADD_HL_HL},
 	0x2A: {"LDA+", 8, Op_LD_A_HLi},
@@ -102,18 +105,24 @@ var OpCodes = map[uint8]OpEntry{
 	0x84: {"ADD A,H", 4, func(gb *GbCpu) { Do_Add_88(gb, &gb.Reg.A, gb.Reg.H) }},
 	0x85: {"ADD A,L", 4, func(gb *GbCpu) { Do_Add_88(gb, &gb.Reg.A, gb.Reg.L) }},
 	0x87: {"ADD A,A", 4, func(gb *GbCpu) { Do_Add_88(gb, &gb.Reg.A, gb.Reg.A) }},
-	0x90: {"SUB A,B", 4, func(gb *GbCpu) { Do_Sub_8(gb, &gb.Reg.A, gb.Reg.B) }},
-	0x91: {"SUB A,C", 4, func(gb *GbCpu) { Do_Sub_8(gb, &gb.Reg.A, gb.Reg.C) }},
-	0x92: {"SUB A,D", 4, func(gb *GbCpu) { Do_Sub_8(gb, &gb.Reg.A, gb.Reg.D) }},
-	0x93: {"SUB A,E", 4, func(gb *GbCpu) { Do_Sub_8(gb, &gb.Reg.A, gb.Reg.E) }},
-	0x94: {"SUB A,H", 4, func(gb *GbCpu) { Do_Sub_8(gb, &gb.Reg.A, gb.Reg.H) }},
-	0x95: {"SUB A,L", 4, func(gb *GbCpu) { Do_Sub_8(gb, &gb.Reg.A, gb.Reg.L) }},
+	0x88: {"ADC B", 4, func(gb *GbCpu) { Do_Adc_88(gb, &gb.Reg.A, gb.Reg.B) }},
+	0x89: {"ADC C", 4, func(gb *GbCpu) { Do_Adc_88(gb, &gb.Reg.A, gb.Reg.C) }},
+	0x8A: {"ADC D", 4, func(gb *GbCpu) { Do_Adc_88(gb, &gb.Reg.A, gb.Reg.D) }},
+	0x8B: {"ADC E", 4, func(gb *GbCpu) { Do_Adc_88(gb, &gb.Reg.A, gb.Reg.E) }},
+	0x8C: {"ADC H", 4, func(gb *GbCpu) { Do_Adc_88(gb, &gb.Reg.A, gb.Reg.H) }},
+	0x8D: {"ADC L", 4, func(gb *GbCpu) { Do_Adc_88(gb, &gb.Reg.A, gb.Reg.L) }},
+	0x90: {"SUB A,B", 4, func(gb *GbCpu) { Do_Sub_88(gb, &gb.Reg.A, gb.Reg.B) }},
+	0x91: {"SUB A,C", 4, func(gb *GbCpu) { Do_Sub_88(gb, &gb.Reg.A, gb.Reg.C) }},
+	0x92: {"SUB A,D", 4, func(gb *GbCpu) { Do_Sub_88(gb, &gb.Reg.A, gb.Reg.D) }},
+	0x93: {"SUB A,E", 4, func(gb *GbCpu) { Do_Sub_88(gb, &gb.Reg.A, gb.Reg.E) }},
+	0x94: {"SUB A,H", 4, func(gb *GbCpu) { Do_Sub_88(gb, &gb.Reg.A, gb.Reg.H) }},
+	0x95: {"SUB A,L", 4, func(gb *GbCpu) { Do_Sub_88(gb, &gb.Reg.A, gb.Reg.L) }},
 	0xA1: {"AND C      ;", 8, func(gb *GbCpu) { Do_And_88(gb, &gb.Reg.A, gb.Reg.C) }},
 	0xA7: {"AND A      ;", 8, func(gb *GbCpu) { Do_And_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xA9: {"XOR C      ;", 4, func(gb *GbCpu) { Do_Xor_88(gb, &gb.Reg.A, gb.Reg.C) }},
 	0xAF: {"XOR A      ;", 4, func(gb *GbCpu) { Do_Xor_88(gb, &gb.Reg.A, gb.Reg.A) }},
-	0xB0: {"ORAB", 4, func(gb *GbCpu) { Do_Or_8(gb, &gb.Reg.A, gb.Reg.B) }},
-	0xB1: {"ORAC", 4, func(gb *GbCpu) { Do_Or_8(gb, &gb.Reg.A, gb.Reg.C) }},
+	0xB0: {"ORAB", 4, func(gb *GbCpu) { Do_Or_88(gb, &gb.Reg.A, gb.Reg.B) }},
+	0xB1: {"ORAC", 4, func(gb *GbCpu) { Do_Or_88(gb, &gb.Reg.A, gb.Reg.C) }},
 	0xC0: {"RET nz", 4, Op_RET_NZ},
 	0xC1: {"POP BC", 16, Op_POP_BC},
 	0xC2: {"JP NZ", 16, Op_JP_NZ},
@@ -601,7 +610,7 @@ func Op_NOP(gb *GbCpu) {
 
 func Op_OR_n(gb *GbCpu) {
 	val := gb.Mem.GetByte(gb.Reg.PC + 1)
-	Do_Or_8(gb, &gb.Reg.A, val)
+	Do_Or_88(gb, &gb.Reg.A, val)
 	gb.Reg.PC++
 }
 
@@ -624,4 +633,37 @@ func Op_Rst28(gb *GbCpu) {
 	gb.pushToStack(uint8(gb.Reg.PC >> 8 & 0xFF))
 	gb.pushToStack(uint8(gb.Reg.PC & 0xFF))
 	gb.Reg.PC = 0x28
+}
+
+// Stolen from Cinoop
+func Op_DAA(gb *GbCpu) {
+	s := uint16(gb.Reg.A)
+
+	if gb.Reg.F & FlagN != 0 {
+		if gb.Reg.F & FlagH != 0 {
+			s = (s - 0x06) & 0xFF
+		}
+		if gb.Reg.F & FlagH != 0 {
+			s -= 0x60
+		}
+	} else {
+		if gb.Reg.F & FlagH != 0 || (s & 0xF) > 9 {
+			s += 0x06
+		}
+		if gb.Reg.F & FlagH != 0 || s > 0x9F {
+			s += 0x60
+		}
+	}
+
+	gb.Reg.A = uint8(s)
+	gb.Reg.F &= ^(FlagH | FlagZ)
+
+	if gb.Reg.A == 0 {
+		gb.Reg.F |= FlagZ
+	}
+	if s >= 0x100 {
+		gb.Reg.F |= FlagC
+	}
+
+	gb.Reg.PC++
 }
