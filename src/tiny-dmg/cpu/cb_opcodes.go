@@ -9,6 +9,8 @@ func Cb_Disp(gb *GbCpu) {
 	fmt.Printf("-> CB %02X\n", op)
 
 	switch op {
+	case 0x11:
+		Cb_rl(gb, &gb.Reg.C, gb.Reg.C)
 	case 0x27:
 		Cb_sla(gb, &gb.Reg.A)
 	case 0x37:
@@ -137,6 +139,29 @@ func Cb_srl(gb *GbCpu, target *uint8, value uint8) {
 	}
 
 	value >>= 1
+
+	if value == 0 {
+		gb.Reg.F |= FlagZ
+	}
+
+	*target = value
+}
+
+func Cb_rl(gb *GbCpu, target *uint8, value uint8) {
+	oldMask := gb.Reg.F
+	gb.Reg.F &= ^FlagMask
+
+	carry := uint8(0)
+	if oldMask & FlagC != 0 {
+		carry = 1
+	}
+
+	if value & 0x80 != 0 {
+		gb.Reg.F |= FlagC
+	}
+
+	value <<= 1;
+	value += carry;
 
 	if value == 0 {
 		gb.Reg.F |= FlagZ
