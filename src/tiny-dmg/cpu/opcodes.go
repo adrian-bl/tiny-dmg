@@ -117,6 +117,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x93: {"SUB A,E", 4, func(gb *GbCpu) { Do_Sub_88(gb, &gb.Reg.A, gb.Reg.E) }},
 	0x94: {"SUB A,H", 4, func(gb *GbCpu) { Do_Sub_88(gb, &gb.Reg.A, gb.Reg.H) }},
 	0x95: {"SUB A,L", 4, func(gb *GbCpu) { Do_Sub_88(gb, &gb.Reg.A, gb.Reg.L) }},
+	0x97: {"SUB A,A", 4, func(gb *GbCpu) { Do_Sub_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xA1: {"AND C      ;", 8, func(gb *GbCpu) { Do_And_88(gb, &gb.Reg.A, gb.Reg.C) }},
 	0xA7: {"AND A      ;", 8, func(gb *GbCpu) { Do_And_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xA9: {"XOR C      ;", 4, func(gb *GbCpu) { Do_Xor_88(gb, &gb.Reg.A, gb.Reg.C) }},
@@ -144,6 +145,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xE2: {"LD (C),A", 8, Op_LD_C_A},
 	0xE5: {"PUSH HL", 16, Op_PUSH_HL},
 	0xE6: {"ANDa", 8, Op_ANDAn},
+	0xE8: {"ADD SP n", 8, Op_ADD_SP_n},
 	0xE9: {"JP HL", 8, Op_JP_HL},
 	0xEA: {"LD (a16),A", 16, Op_LD_a16_A},
 	0xEF: {"RST28", 8, Op_Rst28},
@@ -158,8 +160,9 @@ var OpCodes = map[uint8]OpEntry{
 }
 
 func (gb *GbCpu) crash() {
-	fmt.Printf(">>> crashing at pc=%X, hl=%02X%02X\n", gb.Reg.PC, gb.Reg.H, gb.Reg.L)
-	panic(nil)
+	fmt.Printf(">>> crashing at sp=%X, pc=%X, hl=%02X%02X\n", gb.Reg.SP, gb.Reg.PC, gb.Reg.H, gb.Reg.L)
+	for {
+	}
 }
 
 func Op_RET(gb *GbCpu) {
@@ -545,6 +548,16 @@ func Op_ADD_HL_HL(gb *GbCpu) {
 	gb.Reg.H = uint8((hl >> 8 & 0xFF))
 }
 
+func Op_ADD_SP_n(gb *GbCpu) {
+	gb.Reg.PC++
+	val := uint16(int8(gb.Mem.GetByte(gb.Reg.PC)))
+	Do_Add_1616(gb, &gb.Reg.SP, val)
+
+	// unlike raw add_1616, this does always clear
+	// the zero flag
+	gb.Reg.F &= ^FlagZ
+}
+
 func Op_ADD_A_n(gb *GbCpu) {
 	val := gb.Mem.GetByte(gb.Reg.PC + 1)
 	Do_Add_88(gb, &gb.Reg.A, val)
@@ -639,18 +652,18 @@ func Op_Rst28(gb *GbCpu) {
 func Op_DAA(gb *GbCpu) {
 	s := uint16(gb.Reg.A)
 
-	if gb.Reg.F & FlagN != 0 {
-		if gb.Reg.F & FlagH != 0 {
+	if gb.Reg.F&FlagN != 0 {
+		if gb.Reg.F&FlagH != 0 {
 			s = (s - 0x06) & 0xFF
 		}
-		if gb.Reg.F & FlagH != 0 {
+		if gb.Reg.F&FlagH != 0 {
 			s -= 0x60
 		}
 	} else {
-		if gb.Reg.F & FlagH != 0 || (s & 0xF) > 9 {
+		if gb.Reg.F&FlagH != 0 || (s&0xF) > 9 {
 			s += 0x06
 		}
-		if gb.Reg.F & FlagH != 0 || s > 0x9F {
+		if gb.Reg.F&FlagH != 0 || s > 0x9F {
 			s += 0x60
 		}
 	}

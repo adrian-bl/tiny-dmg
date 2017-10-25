@@ -150,14 +150,14 @@ func Do_Sub_88(gb *GbCpu, target *uint8, value uint8) {
 }
 
 func Do_Adc_88(gb *GbCpu, target *uint8, value uint8) {
-	if gb.Reg.F & FlagC != 0 {
+	if gb.Reg.F&FlagC != 0 {
 		value++
 	}
 
 	result := uint16(*target) + uint16(value)
 
 	gb.Reg.F &= ^FlagMask
-	if result & 0xFF00 != 0 {
+	if result&0xFF00 != 0 {
 		gb.Reg.F |= FlagH
 	}
 	if value == *target {
@@ -172,7 +172,7 @@ func Do_Adc_88(gb *GbCpu, target *uint8, value uint8) {
 }
 
 func Do_Sbc_88(gb *GbCpu, target *uint8, value uint8) {
-	if gb.Reg.F & FlagC != 0 {
+	if gb.Reg.F&FlagC != 0 {
 		value++
 	}
 

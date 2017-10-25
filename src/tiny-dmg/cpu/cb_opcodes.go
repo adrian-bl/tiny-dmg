@@ -87,14 +87,31 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_checkBit(gb, 0x07, gb.Reg.A)
 	case 0x87:
 		Cb_ResetBit(0x00, &gb.Reg.A)
+	case 0xBE:
+		Cb_res_16(gb, 0x07, gb.Reg.H, gb.Reg.L)
 	case 0xDE:
 		Cb_SetHlpBit(gb, 0x03)
 	case 0xBF:
 		Cb_ResetBit(0x07, &gb.Reg.A)
+	case 0xC7:
+		Cb_set(0x00, &gb.Reg.A)
+	case 0xC8:
+		Cb_set(0x01, &gb.Reg.B)
+	case 0xC9:
+		Cb_set(0x01, &gb.Reg.C)
+	case 0xCA:
+		Cb_set(0x01, &gb.Reg.D)
+	case 0xCB:
+		Cb_set(0x01, &gb.Reg.E)
+	case 0xCC:
+		Cb_set(0x01, &gb.Reg.H)
+	case 0xCD:
+		Cb_set(0x01, &gb.Reg.L)
+	case 0xFF:
+		Cb_set(0x07, &gb.Reg.A)
 	default:
 		fmt.Printf("Unknown CB opcode: %02X", op)
-		for {
-		}
+		gb.crash()
 	}
 	gb.Reg.PC += 2
 }
@@ -103,14 +120,14 @@ func Cb_ResetBit(bit uint8, target *uint8) {
 	*target &= ^(1 << bit)
 }
 
-func Cb_SetBit(bit uint8, target *uint8) {
+func Cb_set(bit uint8, target *uint8) {
 	*target |= (1 << bit)
 }
 
 func Cb_SetHlpBit(gb *GbCpu, bit uint8) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
 	val := gb.Mem.GetByte(addr)
-	Cb_SetBit(bit, &val)
+	Cb_set(bit, &val)
 	gb.Mem.WriteByte(addr, val)
 }
 
@@ -168,20 +185,26 @@ func Cb_rl(gb *GbCpu, target *uint8, value uint8) {
 	gb.Reg.F &= ^FlagMask
 
 	carry := uint8(0)
-	if oldMask & FlagC != 0 {
+	if oldMask&FlagC != 0 {
 		carry = 1
 	}
 
-	if value & 0x80 != 0 {
+	if value&0x80 != 0 {
 		gb.Reg.F |= FlagC
 	}
 
-	value <<= 1;
-	value += carry;
+	value <<= 1
+	value += carry
 
 	if value == 0 {
 		gb.Reg.F |= FlagZ
 	}
 
 	*target = value
+}
+
+func Cb_res_16(gb *GbCpu, bit, h, l uint8) {
+	addr := uint16(h)<<8 + uint16(l)
+	val := gb.Mem.GetByte(addr) & ^(1 << bit)
+	gb.Mem.WriteByte(addr, val)
 }
