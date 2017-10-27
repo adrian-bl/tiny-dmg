@@ -73,8 +73,7 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 	}
 
 	if (addr >= 0xFEA0) && (addr < 0xFEFF) {
-		fmt.Printf("Implement me 2\n")
-		panic(nil)
+		fmt.Printf("Ignoring bougous write of %X to %X (Restricted memory!)\n", val, addr)
 		return
 	}
 
