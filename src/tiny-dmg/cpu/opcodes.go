@@ -5,9 +5,9 @@ import (
 )
 
 type OpEntry struct {
-	Name   string
+	Name        string
 	ClockCycles uint8
-	Cback  func(*GbCpu)
+	Cback       func(*GbCpu)
 }
 
 var OpCodes = map[uint8]OpEntry{

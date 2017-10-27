@@ -12,7 +12,7 @@ type GbCpu struct {
 	Reg               Registers
 	Mem               *memory.Memory
 	Lcd               *lcd.Lcd
-	ClockCycles            uint32
+	ClockCycles       uint32
 	OpCode            OpEntry
 }
 
@@ -89,7 +89,7 @@ func (gb *GbCpu) Boot() {
 			fmt.Printf("-")
 		}
 
-		fmt.Printf("]  op=%-18s, c=%d ## %d, c=%d, ff44 = %X, >> FIXME: STAT = %X, LCDC=%02X\n", gb.OpCode.Name, gb.OpCode.ClockCycles, i, gb.ClockCycles, gb.Mem.GetByte(0xFF44), gb.Mem.GetByte(0xFF41), gb.Mem.GetByte(0xFF40))
+		fmt.Printf("] c=%d ## %d, c=%d, LY(FF44) = %X, >> FIXME: STAT = %X (%X), LCDC=%02X, op=%s\n", gb.OpCode.ClockCycles, i, gb.ClockCycles, gb.Mem.GetByte(0xFF44), gb.Mem.GetByte(0xFF41), gb.Mem.GetByte(0xFF41)&0x3, gb.Mem.GetByte(0xFF40), gb.OpCode.Name)
 		i++
 
 		if gb.OpCode.Cback == nil {

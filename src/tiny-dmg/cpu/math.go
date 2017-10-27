@@ -201,7 +201,7 @@ func Do_Cp(gb *GbCpu, a, b uint8) {
 	if b > a {
 		gb.Reg.F |= FlagC
 	}
-	if ((b & 0x0F) > (a & 0x0F)) {
+	if (b & 0x0F) > (a & 0x0F) {
 		gb.Reg.F |= FlagH
 	}
 

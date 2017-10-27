@@ -39,10 +39,12 @@ func (m *Memory) PowerOn() {
 	m.WriteByte(0xFF24, 0x77)
 	m.WriteByte(0xFF25, 0xF3)
 	m.WriteByte(0xFF26, 0xF1)
-	m.WriteByte(0xFF40, 0x91)
-	m.WriteByte(0xFF42, 0x00)
-	m.WriteByte(0xFF43, 0x00)
-	m.WriteByte(0xFF45, 0x00)
+	m.WriteByte(RegLcdControl, 0x91)
+	m.WriteByte(RegLcdState, 0x84)
+	m.WriteByte(RegScrollY, 0x00)
+	m.WriteByte(RegScrollX, 0x00)
+	m.WriteByte(RegCurrentScanline, 0x00)
+	m.WriteByte(RegLYCompare, 0x00)
 	m.WriteByte(0xFF47, 0xFC)
 	m.WriteByte(0xFF48, 0xFF)
 	m.WriteByte(0xFF49, 0xFF)
@@ -99,6 +101,9 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 	if RegCurrentScanline == addr {
 		fmt.Printf("Write to scanline register -> RESETTING SCANLINE VALUE\n", val)
 		val = 0
+	}
+	if RegLcdState == addr {
+		fmt.Printf("LCD WRITE: %d\n", val)
 	}
 	m.memory[addr] = val
 }
