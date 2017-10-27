@@ -71,7 +71,6 @@ func sprites(m *memory.Memory) {
 			px := int(m.GetByte(base+i*4+1)) - 8
 			tn := int(m.GetByte(base + i*4 + 2))
 			// at := m.GetByte(base + i*4 + 3)
-			fmt.Printf("HEH: Y=%d X=%d TN=%d\n", py, px, tn)
 			p := uint16(tn*0x10 + 0x8000)
 			drawTile(s, m, p, px, py)
 		}
