@@ -26,6 +26,14 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_rl(gb, &gb.Reg.L, gb.Reg.L)
 	case 0x19:
 		Cb_rr(gb, &gb.Reg.C, gb.Reg.C)
+	case 0x1A:
+		Cb_rr(gb, &gb.Reg.D, gb.Reg.D)
+	case 0x1B:
+		Cb_rr(gb, &gb.Reg.E, gb.Reg.E)
+	case 0x1C:
+		Cb_rr(gb, &gb.Reg.H, gb.Reg.H)
+	case 0x1D:
+		Cb_rr(gb, &gb.Reg.L, gb.Reg.L)
 	case 0x20:
 		Cb_sla(gb, &gb.Reg.B)
 	case 0x21:
@@ -349,7 +357,7 @@ func Cb_rl(gb *GbCpu, target *uint8, value uint8) {
 
 func Cb_rr(gb *GbCpu, target *uint8, value uint8) {
 	gb.Reg.F &= ^FlagMask
-
+	// FIXME: rr 0xFF on mgba leads to 0xff, we do 0x7f...
 	*target >>= 1
 	if (gb.Reg.F & FlagH) != 0 {
 		*target |= 0x80

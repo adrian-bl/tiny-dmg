@@ -21,6 +21,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x07: {"RLCA			", 4, Op_RLCA},
 	// 0x08 LD(a16),SP , 20
 	0x09: {"ADD HL, BC		", 8, Op_ADD_HL_BC},
+	0x10: {"STOP 0			", 4, func(gb *GbCpu) { fmt.Printf("!! stop ignored\n"); gb.Reg.PC++ }},
 	0x0A: {"LD A, (BC)		", 8, Op_LD_A_BC},
 	0x0B: {"DEC BC			", 8, func(gb *GbCpu) { Do_Dec_88(gb, &gb.Reg.B, &gb.Reg.C) }},
 	0x0C: {"INC C			", 4, func(gb *GbCpu) { Do_Inc_Uint8(gb, &gb.Reg.C) }},
@@ -42,12 +43,13 @@ var OpCodes = map[uint8]OpEntry{
 	0x1C: {"INC E			", 4, func(gb *GbCpu) { Do_Inc_Uint8(gb, &gb.Reg.E) }},
 	0x1D: {"DEC E			", 4, func(gb *GbCpu) { Do_Dec_Uint8(gb, &gb.Reg.E) }},
 	0x1E: {"LD E, d8		", 8, Op_LDEn},
-	// 0x1F RAA, 4
+	0x1F: {"RRA				", 4, Op_RRA},
 	0x20: {"JR NZ, r8		", 8, Op_JPnz}, // Fixme: This can be 12 or 8
 	0x21: {"LD HL, d16		", 12, Op_LD_HL_nn},
 	0x22: {"LD (HL+), A		", 8, Op_LDI_HL_A},
 	0x23: {"INC HL			", 8, func(gb *GbCpu) { Do_Inc_88(gb, &gb.Reg.H, &gb.Reg.L) }},
 	0x24: {"INC H			", 4, func(gb *GbCpu) { Do_Inc_Uint8(gb, &gb.Reg.H) }},
+	0x25: {"DEC H			", 4, func(gb *GbCpu) { Do_Dec_Uint8(gb, &gb.Reg.H) }},
 	0x26: {"LD H, d8		", 8, Op_LD_H_n},
 	0x27: {"DAA				", 4, Op_DAA},
 	0x28: {"JR Z,r8			", 8, Op_JPz}, // Fixme: This can be 12 or 8
@@ -173,7 +175,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xAB: {"XOR E			", 4, func(gb *GbCpu) { Do_Xor_88(gb, &gb.Reg.A, gb.Reg.E) }},
 	0xAC: {"XOR H			", 4, func(gb *GbCpu) { Do_Xor_88(gb, &gb.Reg.A, gb.Reg.H) }},
 	0xAD: {"XOR L			", 4, func(gb *GbCpu) { Do_Xor_88(gb, &gb.Reg.A, gb.Reg.L) }},
-	// 0xae
+	0xAE: {"XOR (HL)		", 8, Op_XOR_HL},
 	0xAF: {"XOR A			", 4, func(gb *GbCpu) { Do_Xor_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xB0: {"OR B			", 4, func(gb *GbCpu) { Do_Or_88(gb, &gb.Reg.A, gb.Reg.B) }},
 	0xB1: {"OR C			", 4, func(gb *GbCpu) { Do_Or_88(gb, &gb.Reg.A, gb.Reg.C) }},
@@ -185,6 +187,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xB7: {"OR A			", 4, func(gb *GbCpu) { Do_Or_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xB8: {"CP B			", 4, func(gb *GbCpu) { Do_Cp(gb, gb.Reg.A, gb.Reg.B) }},
 	0xB9: {"CP C			", 4, func(gb *GbCpu) { Do_Cp(gb, gb.Reg.A, gb.Reg.C) }},
+	0xBB: {"CP E			", 4, func(gb *GbCpu) { Do_Cp(gb, gb.Reg.A, gb.Reg.E) }},
 	0xBE: {"CP (HL)			", 8, Op_CP_HL},
 	0xC0: {"RET NZ			", 8, Op_RET_NZ}, // Fixme: can be 8 or 20
 	0xC1: {"POP BC			", 12, Op_POP_BC},
@@ -226,6 +229,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xF5: {"PUSH AF			", 16, Op_PUSH_AF},
 	0xF6: {"OR d8			", 8, Op_OR_n},
 	0xF8: {"LD HL,SP+r8		", 12, Op_LD_HL_SP_r8},
+	0xF9: {"LD SP,HL		", 8, Op_LD_SP_HL},
 	0xFA: {"LD A, (a16)		", 16, Op_LD_A_a16},
 	0xFB: {"EI				", 4, Op_EI},
 	0xFE: {"CP d8			", 8, Op_CPd8},
@@ -534,6 +538,11 @@ func Op_LD_HL_SP_r8(gb *GbCpu) {
 	gb.Reg.PC += 2
 }
 
+func Op_LD_SP_HL(gb *GbCpu) {
+	gb.Reg.SP = uint16(gb.Reg.L) + uint16(gb.Reg.H)<<8
+	gb.Reg.PC++
+}
+
 func Op_LD_C_A(gb *GbCpu) {
 	gb.Mem.WriteByte(0xFF00+uint16(gb.Reg.C), gb.Reg.A)
 	gb.Reg.PC++
@@ -813,6 +822,12 @@ func Op_OR_HL(gb *GbCpu) {
 	Do_Or_88(gb, &gb.Reg.A, val)
 }
 
+func Op_XOR_HL(gb *GbCpu) {
+	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	val := gb.Mem.GetByte(hl)
+	Do_Xor_88(gb, &gb.Reg.A, val)
+}
+
 func Op_CP_HL(gb *GbCpu) {
 	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
 	val := gb.Mem.GetByte(hl)
@@ -869,6 +884,24 @@ func Op_DAA(gb *GbCpu) {
 	if s >= 0x100 {
 		gb.Reg.F |= FlagC
 	}
+
+	gb.Reg.PC++
+}
+
+func Op_RRA(gb *GbCpu) {
+	carry := byte(0)
+
+	if gb.Reg.F&FlagC != 0 {
+		carry = 1 << 7
+	}
+
+	gb.Reg.F &= ^FlagMask // clear all bits
+	if gb.Reg.A&0x01 != 0 {
+		gb.Reg.F |= FlagC
+	}
+
+	gb.Reg.A >>= 1
+	gb.Reg.A += carry
 
 	gb.Reg.PC++
 }
