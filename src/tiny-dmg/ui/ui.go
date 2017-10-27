@@ -40,11 +40,13 @@ func mapView(m *memory.Memory, memoff int) {
 
 	s := dw.Screen()
 	for {
+		yoff := int(m.GetByte(memory.RegScrollY))
+		xoff := int(m.GetByte(memory.RegScrollX))
 		for i := 0; i < 1024; i++ {
 			taddr := 0x8000 + uint16(m.GetByte(uint16(i+memoff)))*16
 			x := i % 32
 			y := i / 32
-			drawTile(s, m, taddr, x*8, y*8)
+			drawTile(s, m, taddr, x*8-xoff, y*8-yoff)
 		}
 		dw.FlushImage()
 		time.Sleep(10 * time.Millisecond)
@@ -65,8 +67,8 @@ func sprites(m *memory.Memory) {
 	base := uint16(0xFE00)
 	for {
 		for i := uint16(0); i < 40; i++ {
-			py := int(m.GetByte(base + i*4 + 0)) - 16
-			px := int(m.GetByte(base + i*4 + 1)) - 8
+			py := int(m.GetByte(base+i*4+0)) - 16
+			px := int(m.GetByte(base+i*4+1)) - 8
 			tn := int(m.GetByte(base + i*4 + 2))
 			// at := m.GetByte(base + i*4 + 3)
 			fmt.Printf("HEH: Y=%d X=%d TN=%d\n", py, px, tn)
