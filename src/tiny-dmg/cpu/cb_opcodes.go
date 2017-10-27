@@ -9,8 +9,18 @@ func Cb_Disp(gb *GbCpu) {
 	fmt.Printf("-> CB %02X\n", op)
 
 	switch op {
+	case 0x10:
+		Cb_rl(gb, &gb.Reg.B, gb.Reg.B)
 	case 0x11:
 		Cb_rl(gb, &gb.Reg.C, gb.Reg.C)
+	case 0x12:
+		Cb_rl(gb, &gb.Reg.D, gb.Reg.D)
+	case 0x13:
+		Cb_rl(gb, &gb.Reg.E, gb.Reg.E)
+	case 0x14:
+		Cb_rl(gb, &gb.Reg.H, gb.Reg.H)
+	case 0x15:
+		Cb_rl(gb, &gb.Reg.L, gb.Reg.L)
 	case 0x27:
 		Cb_sla(gb, &gb.Reg.A)
 	case 0x33:
@@ -35,6 +45,8 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_checkBit(gb, 0x00, gb.Reg.H)
 	case 0x45:
 		Cb_checkBit(gb, 0x00, gb.Reg.L)
+	case 0x47:
+		Cb_checkBit(gb, 0x00, gb.Reg.A)
 	case 0x48:
 		Cb_checkBit(gb, 0x01, gb.Reg.B)
 	case 0x49:
@@ -63,6 +75,8 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_checkBit(gb, 0x02, gb.Reg.H)
 	case 0x55:
 		Cb_checkBit(gb, 0x02, gb.Reg.L)
+	case 0x57:
+		Cb_checkBit(gb, 0x02, gb.Reg.A)
 	case 0x58:
 		Cb_checkBit(gb, 0x03, gb.Reg.B)
 	case 0x59:

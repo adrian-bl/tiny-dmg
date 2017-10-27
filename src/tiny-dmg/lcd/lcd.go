@@ -73,7 +73,8 @@ func (l *Lcd) Update(cycles uint8) {
 	if (l.m.GetByte(memory.RegLcdControl) & FlagLcdcEnable) == 0 {
 		l.cyclesCounter = 0
 		l.m.WriteRaw(memory.RegCurrentScanline, 0)
-		fmt.Printf("FIXME: Should move lcd status to state 2?\n")
+		l.m.WriteRaw(memory.RegLcdState, 0x80)
+		fmt.Printf("Screen off! reset lcd state?")
 		return
 	}
 
