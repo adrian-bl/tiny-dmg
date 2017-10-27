@@ -22,6 +22,7 @@ func Run(m *memory.Memory) {
 	go mapView(m, 0x9800)
 	go mapView(m, 0x9C00)
 	go tileView(m)
+	go sprites(m)
 	wde.Run()
 	log.Panic("wde run exited!")
 }
@@ -44,6 +45,33 @@ func mapView(m *memory.Memory, memoff int) {
 			x := i % 32
 			y := i / 32
 			drawTile(s, m, taddr, x*8, y*8)
+		}
+		dw.FlushImage()
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func sprites(m *memory.Memory) {
+	dw, err := wde.NewWindow(width, height)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	dw.SetTitle("tiny-dmg! [sprites]")
+	dw.SetSize(width, height)
+	dw.Show()
+
+	s := dw.Screen()
+	base := uint16(0xFE00)
+	for {
+		for i := uint16(0); i < 40; i++ {
+			py := int(m.GetByte(base + i*4 + 0)) - 16
+			px := int(m.GetByte(base + i*4 + 1)) - 8
+			tn := int(m.GetByte(base + i*4 + 2))
+			// at := m.GetByte(base + i*4 + 3)
+			fmt.Printf("HEH: Y=%d X=%d TN=%d\n", py, px, tn)
+			p := uint16(tn*0x10 + 0x8000)
+			drawTile(s, m, p, px, py)
 		}
 		dw.FlushImage()
 		time.Sleep(10 * time.Millisecond)
@@ -182,10 +210,10 @@ func colorize(n byte) *color.RGBA {
 	case 0:
 		return &color.RGBA{0xFA, 0xFA, 0xFA, 0xFF}
 	case 1:
-		return &color.RGBA{0xA0, 0xA0, 0xAF, 0xFF}
+		return &color.RGBA{0xF0, 0xA0, 0xAF, 0xFF}
 	case 2:
-		return &color.RGBA{0x45, 0x45, 0x45, 0xFF}
+		return &color.RGBA{0xF5, 0x45, 0x45, 0xFF}
 	default:
-		return &color.RGBA{0x10, 0x10, 0x10, 0xFF}
+		return &color.RGBA{0xF0, 0x10, 0x10, 0xFF}
 	}
 }

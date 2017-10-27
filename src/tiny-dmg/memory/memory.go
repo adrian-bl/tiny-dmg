@@ -105,6 +105,11 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 	if RegLcdState == addr {
 		fmt.Printf("LCD WRITE: %d\n", val)
 	}
+
+	if RegDoDMA == addr {
+		panic(fmt.Errorf("DMA START: %X\n", val))
+	}
+
 	m.memory[addr] = val
 }
 

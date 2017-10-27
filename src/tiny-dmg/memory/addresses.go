@@ -18,6 +18,7 @@ const (
 	RegScrollX         = 0xFF43
 	RegCurrentScanline = 0xFF44 // LY
 	RegLYCompare       = 0xFF45
+	RegDoDMA           = 0xFF46
 )
 
 // Interrupts
