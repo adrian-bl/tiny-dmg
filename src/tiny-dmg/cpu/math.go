@@ -208,3 +208,19 @@ func Do_Cp(gb *GbCpu, a, b uint8) {
 	gb.Reg.F |= FlagN
 	gb.Reg.PC++
 }
+
+func Do_Rrc(gb *GbCpu, target *uint8) {
+	gb.Reg.F &= ^FlagMask
+
+	carry := *target & 0x01
+
+	*target >>= 1
+	if carry != 0 {
+		gb.Reg.F |= FlagC
+		*target |= 0x80
+	} else {
+		gb.Reg.F &= ^FlagC
+	}
+
+	gb.Reg.PC++
+}

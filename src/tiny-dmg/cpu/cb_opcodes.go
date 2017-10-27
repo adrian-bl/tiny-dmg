@@ -9,6 +9,9 @@ func Cb_Disp(gb *GbCpu) {
 	fmt.Printf("-> CB %02X\n", op)
 
 	switch op {
+	case 0x09:
+		Do_Rrc(gb, &gb.Reg.C)
+		gb.Reg.PC-- // undo
 	case 0x10:
 		Cb_rl(gb, &gb.Reg.B, gb.Reg.B)
 	case 0x11:
@@ -23,6 +26,20 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_rl(gb, &gb.Reg.L, gb.Reg.L)
 	case 0x27:
 		Cb_sla(gb, &gb.Reg.A)
+	case 0x28:
+		Cb_sra(gb, &gb.Reg.B)
+	case 0x29:
+		Cb_sra(gb, &gb.Reg.C)
+	case 0x2A:
+		Cb_sra(gb, &gb.Reg.D)
+	case 0x2B:
+		Cb_sra(gb, &gb.Reg.E)
+	case 0x2C:
+		Cb_sra(gb, &gb.Reg.H)
+	case 0x2D:
+		Cb_sra(gb, &gb.Reg.L)
+	case 0x2F:
+		Cb_sra(gb, &gb.Reg.A)
 	case 0x33:
 		Cb_SwapReg(&gb.Reg.F, &gb.Reg.E)
 	case 0x34:
@@ -157,6 +174,18 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_SetHlpBit(gb, 0x03)
 	case 0xBF:
 		Cb_ResetBit(0x07, &gb.Reg.A)
+	case 0xC0:
+		Cb_set(0x00, &gb.Reg.B)
+	case 0xC1:
+		Cb_set(0x00, &gb.Reg.C)
+	case 0xC2:
+		Cb_set(0x00, &gb.Reg.D)
+	case 0xC3:
+		Cb_set(0x00, &gb.Reg.E)
+	case 0xC4:
+		Cb_set(0x00, &gb.Reg.H)
+	case 0xC5:
+		Cb_set(0x00, &gb.Reg.L)
 	case 0xC7:
 		Cb_set(0x00, &gb.Reg.A)
 	case 0xC8:
@@ -215,6 +244,25 @@ func Cb_sla(gb *GbCpu, target *uint8) {
 	*target <<= 1
 
 	if *target == 0 {
+		gb.Reg.F |= FlagZ
+	}
+}
+
+func Cb_sra(gb *GbCpu, target *uint8) {
+	gb.Reg.F &= ^FlagMask
+
+	carry := *target & 0x01
+	if carry != 0 {
+		gb.Reg.F |= FlagC
+	} else {
+		gb.Reg.F &= ^FlagC
+	}
+
+	*target = (*target & 0x80) | (*target >> 1)
+
+	if *target != 0 {
+		gb.Reg.F &= ^FlagZ
+	} else {
 		gb.Reg.F |= FlagZ
 	}
 }
