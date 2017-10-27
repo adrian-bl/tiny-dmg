@@ -74,6 +74,7 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 
 	if (addr >= 0xFEA0) && (addr < 0xFEFF) {
 		fmt.Printf("Implement me 2\n")
+		panic(nil)
 		return
 	}
 
@@ -91,12 +92,12 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 		fmt.Printf("Write to joypad reg, faking write to be: %X\n", val)
 	}
 
-	if 0xFF04 == addr {
+	if RegDivider == addr {
 		fmt.Printf("Write to divider register!\n")
 		panic(nil)
 	}
 
-	if addr == 0xFF44 {
+	if RegCurrentScanline == addr {
 		fmt.Printf("Write to scanline register -> RESETTING SCANLINE VALUE\n", val)
 		val = 0
 	}
