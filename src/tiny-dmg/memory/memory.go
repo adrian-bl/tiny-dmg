@@ -17,6 +17,7 @@ func New(r rom.RomImage) (m *Memory, err error) {
 }
 
 func (m *Memory) PowerOn() {
+	m.WriteByte(RegJoypadInput, 0xCF) // FIXME: Remove once we have joypad emulation
 	m.WriteByte(0xFF05, 0x00)
 	m.WriteByte(0xFF06, 0x00)
 	m.WriteByte(0xFF07, 0x00)
@@ -76,7 +77,7 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 		return
 	}
 
-	if 0xFF00 == addr {
+	if RegJoypadInput == addr {
 		switch val {
 		case 0x10:
 			val = 0xDF
@@ -85,8 +86,7 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 		case 0x30:
 			val = 0xFF
 		default:
-			fmt.Printf("Unexpected! %X\n", val)
-			panic(nil)
+			fmt.Printf("Unexpected joypad write: %X\n", val)
 		}
 		fmt.Printf("Write to joypad reg, faking write to be: %X\n", val)
 	}

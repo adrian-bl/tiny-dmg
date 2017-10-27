@@ -13,9 +13,6 @@ const (
 )
 
 const (
-	RegLcdControl      = 0xFF40 // LCDC
-	RegLcdState        = 0xFF41 // STAT
-	RegCurrentScanline = 0xFF44 // LY
 	CyclesPerScanline  = 456
 	CyclesHblank       = 204
 	CyclesSrchSprites  = 80
@@ -52,11 +49,11 @@ func New(m *memory.Memory) (l *Lcd, err error) {
 }
 
 func (l *Lcd) PowerOn() {
-	l.m.WriteByte(RegLcdControl, FlagLcdcBgDisplay|FlagLcdcBgWindowTileSelect|FlagLcdcEnable)
-	fmt.Printf("# turning LCD on via %08X -> 0x%02X \n", RegLcdControl, l.m.GetByte(RegLcdControl))
+	l.m.WriteByte(memory.RegLcdControl, FlagLcdcBgDisplay|FlagLcdcBgWindowTileSelect|FlagLcdcEnable)
+	fmt.Printf("# turning LCD on via %08X -> 0x%02X \n", memory.RegLcdControl, l.m.GetByte(memory.RegLcdControl))
 
 	l.cyclesCounter = CyclesSrchSprites // gnuboy sets this to 40? (we use double cycles)
-	l.m.WriteByte(RegCurrentScanline, 0x00)
+	l.m.WriteByte(memory.RegCurrentScanline, 0x00)
 
 }
 
@@ -76,14 +73,14 @@ func (l *Lcd) Update(opCycles uint8) {
 
 	l.cyclesCounter += int16(opCycles)
 
-	state := l.m.GetByte(RegLcdState) & 0xF
+	state := l.m.GetByte(memory.RegLcdState) & 0xF
 	switch state {
 	case GpuModeHblank:
 		if l.cyclesCounter >= CyclesHblank {
 			l.cyclesCounter = 0
-			thisScanline := l.m.GetByte(RegCurrentScanline)
+			thisScanline := l.m.GetByte(memory.RegCurrentScanline)
 			thisScanline++
-			l.m.WriteRaw(RegCurrentScanline, thisScanline)
+			l.m.WriteRaw(memory.RegCurrentScanline, thisScanline)
 			if thisScanline == LastVisibleScanline-1 {
 				state = GpuModeVblank
 			} else {
@@ -92,7 +89,7 @@ func (l *Lcd) Update(opCycles uint8) {
 		}
 	case GpuModeVblank:
 		if l.cyclesCounter >= CyclesPerScanline {
-			thisScanline := l.m.GetByte(RegCurrentScanline)
+			thisScanline := l.m.GetByte(memory.RegCurrentScanline)
 			thisScanline++
 			state = GpuModeHblank
 			if thisScanline > LastScanLine {
@@ -100,7 +97,7 @@ func (l *Lcd) Update(opCycles uint8) {
 				thisScanline = 0
 				state = GpuModeHblank
 			}
-			l.m.WriteRaw(RegCurrentScanline, thisScanline)
+			l.m.WriteRaw(memory.RegCurrentScanline, thisScanline)
 		}
 	case GpuModeSrchSprites:
 		if l.cyclesCounter >= CyclesSrchSprites {
@@ -118,7 +115,7 @@ func (l *Lcd) Update(opCycles uint8) {
 	default:
 		panic(nil)
 	}
-	l.m.WriteRaw(RegLcdState, state)
+	l.m.WriteRaw(memory.RegLcdState, state)
 	l.m.Dump()
 	/*
 

@@ -1,0 +1,30 @@
+package memory
+
+
+const (
+	RegJoypadInput = 0xFF00
+	RegSerialTransferData = 0xFF01
+	RegSerialTransferControl = 0xFF02
+	RegDivider = 0xFF04
+	RegTimerCounter = 0xFF05
+	RegTimerModulo = 0xFF06
+	RegTimerControl = 0xFF07
+)
+
+// LCD related
+const(
+	RegLcdControl      = 0xFF40 // LCDC
+	RegLcdState        = 0xFF41 // STAT
+	RegScrollY = 0xFF42
+	RegScrollX = 0xFF43
+	RegCurrentScanline = 0xFF44 // LY
+	RegLYCompare = 0xFF45
+)
+
+// Interrupts
+
+const (
+	RegInterruptFlag = 0xFF0F
+	RegInterruptEnable = 0xFFFF
+
+)
