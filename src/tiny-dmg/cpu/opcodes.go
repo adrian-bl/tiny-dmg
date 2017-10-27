@@ -13,6 +13,7 @@ type OpEntry struct {
 var OpCodes = map[uint8]OpEntry{
 	0x00: {"NOOP			", 4, Op_NOP},
 	0x01: {"LD BC, d16		", 12, Op_LD_BC_nn},
+	0x02: {"LD (BC), A		", 8, Op_LD_BC_A},
 	0x03: {"INC BC			", 8, func(gb *GbCpu) { Do_Inc_88(gb, &gb.Reg.B, &gb.Reg.C) }},
 	0x04: {"INC B			", 4, func(gb *GbCpu) { Do_Inc_Uint8(gb, &gb.Reg.B) }},
 	0x05: {"DEC B			", 4, func(gb *GbCpu) { Do_Dec_Uint8(gb, &gb.Reg.B) }},
@@ -28,7 +29,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x0F: {"RRC A			", 4, func(gb *GbCpu) { Do_Rrc(gb, &gb.Reg.A) }},
 	// 0x10 STOP 0, 4
 	0x11: {"LD DE, d16		", 12, Op_LD_DE_nn},
-	0x12: {"LD (DE), A		", 8, Op_LD_n_A},
+	0x12: {"LD (DE), A		", 8, Op_LD_DE_A},
 	0x13: {"INC DE			", 8, func(gb *GbCpu) { Do_Inc_88(gb, &gb.Reg.D, &gb.Reg.E) }},
 	0x14: {"INC D			", 4, func(gb *GbCpu) { Do_Inc_Uint8(gb, &gb.Reg.D) }},
 	0x15: {"DEC D			", 4, func(gb *GbCpu) { Do_Dec_Uint8(gb, &gb.Reg.D) }},
@@ -197,6 +198,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xCB: {"PREFIX CB		", 4, Cb_Disp}, // fixme: cb takes 4 cycles + the code executed (mostly 8)
 	0xCC: {"CALL Z, a16		", 12, Op_CALL_Z_a16}, // fixme: can be 12 or 24
 	0xCD: {"CALL a16		", 24, Op_CALL},
+	0xCE: {"ADC A, d8		", 8, Op_ADC_A_d8},
 	0xCF: {"RST 8			", 16, Op_Rst8},
 	0xD0: {"RET NC			", 8, Op_RetNC}, // fixme: 20 or 8 ?!
 	0xD1: {"POP DE			", 12, Op_POP_DE},
@@ -215,6 +217,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xE8: {"ADD SP, r8		", 16, Op_ADD_SP_n},
 	0xE9: {"JP (HL)			", 4, Op_JP_HL},
 	0xEA: {"LD (a16), A		", 16, Op_LD_a16_A},
+	0xEE: {"XOR d8			", 8, Op_XOR_d8},
 	0xEF: {"RST 28			", 16, Op_Rst28},
 	0xF0: {"LD A, (a8)		", 12, Op_LDHAn}, //
 	0xF1: {"POP AF			", 12, Op_POP_AF},
@@ -228,7 +231,7 @@ var OpCodes = map[uint8]OpEntry{
 }
 
 func (gb *GbCpu) crash() {
-	fmt.Printf(">>> crashing at sp=%X, pc=%X, hl=%02X%02X, a=%X\n", gb.Reg.SP, gb.Reg.PC, gb.Reg.H, gb.Reg.L, gb.Reg.A)
+	fmt.Printf(">>> crashing at sp=%X, pc=%X, hl=%02X%02X, a=%X, f=%X\n", gb.Reg.SP, gb.Reg.PC, gb.Reg.H, gb.Reg.L, gb.Reg.A, gb.Reg.F)
 	for {
 	}
 }
@@ -323,9 +326,10 @@ func Op_CPd8(gb *GbCpu) {
 
 func Op_RetNC(gb *GbCpu) {
 	if gb.Reg.F&FlagC == 0 {
-		panic(nil) // not implemented yet
+		gb.Reg.PC = uint16(gb.popFromStack()) + uint16(gb.popFromStack())<<8
+	} else {
+		gb.Reg.PC++
 	}
-	gb.Reg.PC++
 }
 
 func Op_RLCA(gb *GbCpu) {
@@ -487,8 +491,14 @@ func Op_LDEn(gb *GbCpu) {
 }
 
 // Put value of A into location specified by DE
-func Op_LD_n_A(gb *GbCpu) {
+func Op_LD_DE_A(gb *GbCpu) {
 	addr := uint16(gb.Reg.D)<<8 + uint16(gb.Reg.E)
+	gb.Mem.WriteByte(addr, gb.Reg.A)
+	gb.Reg.PC++
+}
+
+func Op_LD_BC_A(gb *GbCpu) {
+	addr := uint16(gb.Reg.B)<<8 + uint16(gb.Reg.C)
 	gb.Mem.WriteByte(addr, gb.Reg.A)
 	gb.Reg.PC++
 }
@@ -865,4 +875,16 @@ func Op_CCF(gb *GbCpu) {
 	}
 	gb.Reg.F &= ^(FlagH | FlagN)
 	gb.Reg.PC++
+}
+
+func Op_ADC_A_d8(gb *GbCpu) {
+	val := gb.Mem.GetByte(gb.Reg.PC + 1)
+	Do_Adc_88(gb, &gb.Reg.A, val)
+	gb.Reg.PC++
+}
+
+func Op_XOR_d8(gb *GbCpu) {
+	val := gb.Mem.GetByte(gb.Reg.PC + 1)
+	Do_Xor_88(gb, &gb.Reg.A, val)
+	gb.Reg.PC++ // +1 because we read one byte
 }

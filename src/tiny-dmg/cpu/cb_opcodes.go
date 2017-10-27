@@ -24,6 +24,20 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_rl(gb, &gb.Reg.H, gb.Reg.H)
 	case 0x15:
 		Cb_rl(gb, &gb.Reg.L, gb.Reg.L)
+	case 0x19:
+		Cb_rr(gb, &gb.Reg.C, gb.Reg.C)
+	case 0x20:
+		Cb_sla(gb, &gb.Reg.B)
+	case 0x21:
+		Cb_sla(gb, &gb.Reg.C)
+	case 0x22:
+		Cb_sla(gb, &gb.Reg.D)
+	case 0x23:
+		Cb_sla(gb, &gb.Reg.E)
+	case 0x24:
+		Cb_sla(gb, &gb.Reg.H)
+	case 0x25:
+		Cb_sla(gb, &gb.Reg.L)
 	case 0x27:
 		Cb_sla(gb, &gb.Reg.A)
 	case 0x28:
@@ -48,6 +62,18 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_SwapReg(&gb.Reg.F, &gb.Reg.L)
 	case 0x37:
 		Cb_SwapReg(&gb.Reg.F, &gb.Reg.A)
+	case 0x38:
+		Cb_srl(gb, &gb.Reg.B, gb.Reg.B)
+	case 0x39:
+		Cb_srl(gb, &gb.Reg.C, gb.Reg.C)
+	case 0x3A:
+		Cb_srl(gb, &gb.Reg.D, gb.Reg.D)
+	case 0x3B:
+		Cb_srl(gb, &gb.Reg.E, gb.Reg.E)
+	case 0x3C:
+		Cb_srl(gb, &gb.Reg.H, gb.Reg.H)
+	case 0x3D:
+		Cb_srl(gb, &gb.Reg.L, gb.Reg.L)
 	case 0x3F:
 		Cb_srl(gb, &gb.Reg.A, gb.Reg.A)
 	case 0x40:
@@ -319,6 +345,27 @@ func Cb_rl(gb *GbCpu, target *uint8, value uint8) {
 	}
 
 	*target = value
+}
+
+func Cb_rr(gb *GbCpu, target *uint8, value uint8) {
+	gb.Reg.F &= ^FlagMask
+
+	*target >>= 1
+	if (gb.Reg.F & FlagH) != 0 {
+		*target |= 0x80
+	}
+
+	if *target&0x01 != 0 {
+		gb.Reg.F |= FlagC
+	} else {
+		gb.Reg.F &= ^FlagC
+	}
+
+	if *target != 0 {
+		gb.Reg.F &= ^FlagZ
+	} else {
+		gb.Reg.F |= FlagZ
+	}
 }
 
 func Cb_res_16(gb *GbCpu, bit, h, l uint8) {

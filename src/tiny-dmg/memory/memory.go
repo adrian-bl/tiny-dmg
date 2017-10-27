@@ -55,7 +55,7 @@ func (m *Memory) PowerOn() {
 }
 
 func (m *Memory) GetByte(addr uint16) byte {
-	if addr == 0xFF85 {
+	if addr == 0xFF85 || addr == 0xFFA0 {
 		fmt.Printf("TETRIS HACK!\n")
 		return 1
 	}
