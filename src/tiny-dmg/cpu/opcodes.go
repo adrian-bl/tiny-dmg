@@ -144,6 +144,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x8B: {"ADC E			", 4, func(gb *GbCpu) { Do_Adc_88(gb, &gb.Reg.A, gb.Reg.E) }},
 	0x8C: {"ADC H			", 4, func(gb *GbCpu) { Do_Adc_88(gb, &gb.Reg.A, gb.Reg.H) }},
 	0x8D: {"ADC L			", 4, func(gb *GbCpu) { Do_Adc_88(gb, &gb.Reg.A, gb.Reg.L) }},
+	0x8E: {"ADC A,(HL)		", 8, Op_ADC_A_HL},
 	0x90: {"SUB A, B		", 4, func(gb *GbCpu) { Do_Sub_88(gb, &gb.Reg.A, gb.Reg.B) }},
 	0x91: {"SUB A, C		", 4, func(gb *GbCpu) { Do_Sub_88(gb, &gb.Reg.A, gb.Reg.C) }},
 	0x92: {"SUB A, D		", 4, func(gb *GbCpu) { Do_Sub_88(gb, &gb.Reg.A, gb.Reg.D) }},
@@ -584,6 +585,11 @@ func Op_SUB_A_HL(gb *GbCpu) {
 func Op_SBC_A_HL(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
 	Do_Sbc_88(gb, &gb.Reg.A, gb.Mem.GetByte(addr))
+}
+
+func Op_ADC_A_HL(gb *GbCpu) {
+	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	Do_Adc_88(gb, &gb.Reg.A, gb.Mem.GetByte(addr))
 }
 
 func Op_ADD_A_HL(gb *GbCpu) {
