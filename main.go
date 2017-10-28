@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	"tiny-dmg/cpu"
+	"tiny-dmg/joypad"
 	"tiny-dmg/lcd"
 	"tiny-dmg/memory"
 	"tiny-dmg/rom"
 	"tiny-dmg/ui"
-	"tiny-dmg/joypad"
 )
 
 func main() {

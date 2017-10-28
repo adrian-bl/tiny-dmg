@@ -9,8 +9,8 @@ import (
 	"runtime"
 	"sync"
 	"time"
-	"tiny-dmg/memory"
 	"tiny-dmg/joypad"
+	"tiny-dmg/memory"
 )
 
 const (
@@ -130,34 +130,41 @@ func loop(j *joypad.Joypad) {
 				switch e := ei.(type) {
 				case wde.KeyDownEvent:
 					switch e.Key {
-						case "right_arrow":
-							j.KeyRight = true
-						case "left_arrow":
-							j.KeyLeft = true
-						case "return":
-							j.ButtonStart = true
-						case "a":
-							j.ButtonA = true
-						case "s":
-							j.ButtonB = true
-						case "space":
-							j.ButtonSelect = true
+					case "right_arrow":
+						j.KeyRight = true
+					case "left_arrow":
+						j.KeyLeft = true
+					case "up_arrow":
+						j.KeyUp = true
+					case "down_arrow":
+						j.KeyDown = true
+					case "return":
+						j.ButtonStart = true
+					case "a":
+						j.ButtonA = true
+					case "s":
+						j.ButtonB = true
+					case "space":
+						j.ButtonSelect = true
 					}
 				case wde.KeyUpEvent:
-					fmt.Printf("XXX KEY EVENT: %s = %v\n", e.Key, false)
 					switch e.Key {
-						case "right_arrow":
-							j.KeyRight = false
-						case "left_arrow":
-							j.KeyLeft = false
-						case "return":
-							j.ButtonStart = false
-						case "a":
-							j.ButtonA = false
-						case "s":
-							j.ButtonB = false
-						case "space":
-							j.ButtonSelect = false
+					case "right_arrow":
+						j.KeyRight = false
+					case "left_arrow":
+						j.KeyLeft = false
+					case "up_arrow":
+						j.KeyUp = false
+					case "down_arrow":
+						j.KeyDown = false
+					case "return":
+						j.ButtonStart = false
+					case "a":
+						j.ButtonA = false
+					case "s":
+						j.ButtonB = false
+					case "space":
+						j.ButtonSelect = false
 					}
 				case wde.CloseEvent:
 					fmt.Println("close")
@@ -170,7 +177,6 @@ func loop(j *joypad.Joypad) {
 			done <- true
 			fmt.Println("end of events")
 		}()
-
 
 	}
 	wg.Add(1)

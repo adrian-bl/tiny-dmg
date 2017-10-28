@@ -3,8 +3,8 @@ package memory
 import (
 	"fmt"
 	"io/ioutil"
-	"tiny-dmg/rom"
 	"tiny-dmg/joypad"
+	"tiny-dmg/rom"
 )
 
 type Memory struct {
