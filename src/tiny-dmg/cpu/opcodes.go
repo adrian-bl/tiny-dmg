@@ -69,7 +69,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x36: {"LD (HL), d8		", 12, Op_LD_HL_d8},
 	// 0x37 SCF 4
 	0x38: {"JR C, r8		", 8, Op_JR_C_n}, // Fixme: this can be 12 or 8
-	// 0x39 ADD HL, SP , 8
+	0x39: {"ADD HL, SP		", 8, Op_ADD_HL_SP},
 	0x3A: {"LD A, (HL-)		", 8, Op_LD_A_HLdec},
 	// 0x3B DEC SP, 8
 	0x3C: {"INC A			", 4, func(gb *GbCpu) { Do_Inc_Uint8(gb, &gb.Reg.A) }},
@@ -718,6 +718,14 @@ func Op_ADD_HL_BC(gb *GbCpu) {
 	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
 	bc := uint16(gb.Reg.B)<<8 + uint16(gb.Reg.C)
 	Do_Add_1616(gb, &hl, bc)
+
+	gb.Reg.L = uint8(hl & 0xFF)
+	gb.Reg.H = uint8((hl >> 8 & 0xFF))
+}
+
+func Op_ADD_HL_SP(gb *GbCpu) {
+	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	Do_Add_1616(gb, &hl, gb.Reg.SP)
 
 	gb.Reg.L = uint8(hl & 0xFF)
 	gb.Reg.H = uint8((hl >> 8 & 0xFF))
