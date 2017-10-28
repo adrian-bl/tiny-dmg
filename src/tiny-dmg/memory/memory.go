@@ -68,7 +68,9 @@ func (m *Memory) GetByte(addr uint16) byte {
 		fmt.Printf("Implement me\n")
 		panic(nil)
 	}
-
+if addr == 0xFF85 {
+	return 1
+}
 	return m.memory[addr]
 }
 
@@ -100,7 +102,7 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 		default:
 			fmt.Printf("Unexpected joypad write: %X\n", val)
 		}
-		fmt.Printf("Write to joypad reg, faking write to be: %X\n", val)
+		fmt.Printf("Write to joypad reg, faking write to be: %X -- fixme: just set bits!\n", val)
 	}
 
 	if RegDivider == addr {

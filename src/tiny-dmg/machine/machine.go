@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 	"tiny-dmg/cpu"
+	"tiny-dmg/interrupts"
 	"tiny-dmg/lcd"
 	"tiny-dmg/memory"
 )
@@ -12,13 +13,15 @@ type Machine struct {
 	cpu *cpu.GbCpu
 	lcd *lcd.Lcd
 	mem *memory.Memory
+	itr *interrupts.Interrupts
 }
 
-func New(cpu *cpu.GbCpu, lcd *lcd.Lcd, mem *memory.Memory) (mach *Machine, err error) {
+func New(c *cpu.GbCpu, m *memory.Memory, l *lcd.Lcd) (mach *Machine, err error) {
 	mach = new(Machine)
-	mach.cpu = cpu
-	mach.lcd = lcd
-	mach.mem = mem
+	mach.cpu = c
+	mach.lcd = l
+	mach.mem = m
+	mach.itr = interrupts.New()
 	return
 }
 
@@ -74,6 +77,6 @@ func (mach *Machine) Run() {
 		mach.cpu.ClockCycles += uint32(mach.cpu.OpCode.ClockCycles)
 
 		mach.lcd.Update(mach.cpu.OpCode.ClockCycles)
-
+		mach.itr.Update(mach.cpu, mach.mem, mach.lcd)
 	}
 }

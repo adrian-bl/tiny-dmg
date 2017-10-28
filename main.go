@@ -42,7 +42,7 @@ func main() {
 	// Launch our simple UI
 	go ui.Run(m, j)
 
-	mach, err := machine.New(c, l, m)
+	mach, err := machine.New(c, m, l)
 	if err != nil {
 		panic(err)
 	}

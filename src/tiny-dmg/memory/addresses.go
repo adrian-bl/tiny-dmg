@@ -27,3 +27,7 @@ const (
 	RegInterruptFlag   = 0xFF0F
 	RegInterruptEnable = 0xFFFF
 )
+
+const (
+	StartOamRange = 0xFE00
+)

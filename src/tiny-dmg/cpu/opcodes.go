@@ -210,6 +210,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xD5: {"PUSH DE			", 16, Op_PUSH_DE},
 	0xD6: {"SUB d8			", 8, Op_SUB_d8},
 	0xD8: {"RET C			", 8, Op_RET_C}, // Fixme: can be 8 or 20
+	0xD9: {"RETI			", 16, Op_RETI},
 	0xDA: {"JP C,a16		", 12, Op_JP_C_NN}, // Fixme: can be 12 or 16
 	0xDE: {"SBC A,d8		", 8, Op_SBC_A_d8},
 	0xDF: {"RST	18			", 16, func(gb *GbCpu) { Op_Rst(gb, 0x18) }},
@@ -233,6 +234,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xFA: {"LD A, (a16)		", 16, Op_LD_A_a16},
 	0xFB: {"EI				", 4, Op_EI},
 	0xFE: {"CP d8			", 8, Op_CPd8},
+	0xFF: {"RST 38			", 16, func(gb *GbCpu) { Op_Rst(gb, 0x38) }},
 }
 
 func (gb *GbCpu) crash() {
@@ -267,6 +269,11 @@ func Op_RET_C(gb *GbCpu) {
 	} else {
 		gb.Reg.PC++
 	}
+}
+
+func Op_RETI(gb *GbCpu) {
+	gb.InterruptsEnabled = true
+	Op_RET(gb)
 }
 
 func Op_JP_HL(gb *GbCpu) {
@@ -467,7 +474,7 @@ func Op_LDHnA(gb *GbCpu) {
 	old := gb.mem.GetByte(dst)
 	gb.mem.WriteByte(dst, gb.Reg.A)
 	gb.Reg.PC += 2
-	fmt.Printf("WROTE %04X to %04X, it was %04X\n", gb.mem.GetByte(dst), dst, old)
+	fmt.Printf("WROTE %04X to %04X, it was %04X -> %c\n", gb.mem.GetByte(dst), dst, old, gb.Reg.A)
 }
 
 func Op_LDAn(gb *GbCpu) {
@@ -848,7 +855,6 @@ func Op_Rst(gb *GbCpu, pc uint16) {
 	gb.pushToStack(uint8(gb.Reg.PC & 0xFF))
 	gb.Reg.PC = pc
 }
-
 
 // Stolen from Cinoop
 func Op_DAA(gb *GbCpu) {
