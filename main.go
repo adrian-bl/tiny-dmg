@@ -7,9 +7,15 @@ import (
 	"tiny-dmg/memory"
 	"tiny-dmg/rom"
 	"tiny-dmg/ui"
+	"tiny-dmg/joypad"
 )
 
 func main() {
+
+	j, err := joypad.New()
+	if err != nil {
+		panic(err)
+	}
 
 	r, err := rom.NewFromDisk("/tmp/hello-world.gb")
 	if err != nil {
@@ -17,7 +23,7 @@ func main() {
 	}
 	fmt.Printf("Loaded rom with name: *%s*\n", r.Title)
 
-	m, err := memory.New(r)
+	m, err := memory.New(r, j)
 	if err != nil {
 		panic(err)
 	}
@@ -27,7 +33,7 @@ func main() {
 		panic(err)
 	}
 
-	go ui.Run(m)
+	go ui.Run(m, j)
 
 	fmt.Printf("Assembling machine...")
 	gb, err := cpu.New(m, l)

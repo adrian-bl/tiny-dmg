@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 	"tiny-dmg/memory"
+	"tiny-dmg/joypad"
 )
 
 const (
@@ -17,12 +18,13 @@ const (
 	height = 144
 )
 
-func Run(m *memory.Memory) {
+func Run(m *memory.Memory, j *joypad.Joypad) {
 	//go loop(m)
 	go mapView(m, 0x9800)
 	go mapView(m, 0x9C00)
 	go tileView(m)
 	go sprites(m)
+	go loop(j)
 	wde.Run()
 	log.Panic("wde run exited!")
 }
@@ -104,7 +106,7 @@ func tileView(m *memory.Memory) {
 	}
 }
 
-func loop(m *memory.Memory) {
+func loop(j *joypad.Joypad) {
 	var wg sync.WaitGroup
 
 	x := func() {
@@ -113,7 +115,7 @@ func loop(m *memory.Memory) {
 			fmt.Println(err)
 			return
 		}
-		dw.SetTitle("tiny-dmg!")
+		dw.SetTitle("event input field")
 		dw.SetSize(width, height)
 		dw.Show()
 
@@ -126,36 +128,36 @@ func loop(m *memory.Memory) {
 			for ei := range events {
 				runtime.Gosched()
 				switch e := ei.(type) {
-				case wde.MouseDownEvent:
-					fmt.Println("clicked", e.Where.X, e.Where.Y, e.Which)
-					// dw.Close()
-					// break loop
-				case wde.MouseUpEvent:
-				case wde.MouseMovedEvent:
-				case wde.MouseDraggedEvent:
-				case wde.MouseEnteredEvent:
-					fmt.Println("mouse entered", e.Where.X, e.Where.Y)
-				case wde.MouseExitedEvent:
-					fmt.Println("mouse exited", e.Where.X, e.Where.Y)
-				case wde.MagnifyEvent:
-					fmt.Println("magnify", e.Where, e.Magnification)
-				case wde.RotateEvent:
-					fmt.Println("rotate", e.Where, e.Rotation)
-				case wde.ScrollEvent:
-					fmt.Println("scroll", e.Where, e.Delta)
 				case wde.KeyDownEvent:
-					// fmt.Println("KeyDownEvent", e.Glyph)
+					switch e.Key {
+						case "right_arrow":
+							j.KeyRight = true
+						case "left_arrow":
+							j.KeyLeft = true
+						case "return":
+							j.ButtonStart = true
+						case "a":
+							j.ButtonA = true
+						case "s":
+							j.ButtonB = true
+						case "space":
+							j.ButtonSelect = true
+					}
 				case wde.KeyUpEvent:
-					// fmt.Println("KeyUpEvent", e.Glyph)
-				case wde.KeyTypedEvent:
-					fmt.Printf("typed key %v, glyph %v, chord %v\n", e.Key, e.Glyph, e.Chord)
-					switch e.Glyph {
-					case "1":
-						dw.SetCursor(wde.NormalCursor)
-					case "2":
-						dw.SetCursor(wde.CrosshairCursor)
-					case "3":
-						dw.SetCursor(wde.GrabHoverCursor)
+					fmt.Printf("XXX KEY EVENT: %s = %v\n", e.Key, false)
+					switch e.Key {
+						case "right_arrow":
+							j.KeyRight = false
+						case "left_arrow":
+							j.KeyLeft = false
+						case "return":
+							j.ButtonStart = false
+						case "a":
+							j.ButtonA = false
+						case "s":
+							j.ButtonB = false
+						case "space":
+							j.ButtonSelect = false
 					}
 				case wde.CloseEvent:
 					fmt.Println("close")
@@ -169,18 +171,7 @@ func loop(m *memory.Memory) {
 			fmt.Println("end of events")
 		}()
 
-		s := dw.Screen()
-		// vram is $8000-$97FF, each tile is 8x8 -> 16 bytes
-		for {
-			for i := 0; i < 360; i++ {
-				p := uint16(i*0x10 + 0x8000)
-				x := (i % 20) * 8
-				y := (i / 20) * 8
-				drawTile(s, m, p, x, y)
-			}
-			dw.FlushImage()
-			time.Sleep(10 * time.Millisecond)
-		}
+
 	}
 	wg.Add(1)
 	go x()

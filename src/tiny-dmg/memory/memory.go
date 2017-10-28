@@ -4,20 +4,24 @@ import (
 	"fmt"
 	"io/ioutil"
 	"tiny-dmg/rom"
+	"tiny-dmg/joypad"
 )
 
 type Memory struct {
 	memory [0x10000]byte // memory ranges from 0x0000 - 0xFFFF
+	joypad *joypad.Joypad
 }
 
-func New(r rom.RomImage) (m *Memory, err error) {
+func New(r rom.RomImage, j *joypad.Joypad) (m *Memory, err error) {
 	m = new(Memory)
 	copy(m.memory[0:], r.Blob[0:]) // fixme: maybe we should start at 0x100 ?
+
+	m.joypad = j
 	return
 }
 
 func (m *Memory) PowerOn() {
-	m.WriteByte(RegJoypadInput, 0xCF) // FIXME: Remove once we have joypad emulation
+	//m.WriteByte(RegJoypadInput, 0xCF) // FIXME: Remove once we have joypad emulation
 	m.WriteByte(0xFF05, 0x00)
 	m.WriteByte(0xFF06, 0x00)
 	m.WriteByte(0xFF07, 0x00)
@@ -55,6 +59,14 @@ func (m *Memory) PowerOn() {
 }
 
 func (m *Memory) GetByte(addr uint16) byte {
+
+	if addr == RegJoypadInput {
+		return m.joypad.GetJoypadByte(m.memory[addr])
+	}
+	if addr == 0xFF85 || addr == 0xFFA0 {
+		fmt.Printf("TETRIS HACK\n")
+		return 1
+	}
 	return m.memory[addr]
 }
 
