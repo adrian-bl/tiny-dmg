@@ -203,7 +203,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xCC: {"CALL Z, a16		", 12, Op_CALL_Z_a16}, // fixme: can be 12 or 24
 	0xCD: {"CALL a16		", 24, Op_CALL},
 	0xCE: {"ADC A, d8		", 8, Op_ADC_A_d8},
-	0xCF: {"RST 8			", 16, Op_Rst8},
+	0xCF: {"RST 8			", 16, func(gb *GbCpu) { Op_Rst(gb, 0x08) }},
 	0xD0: {"RET NC			", 8, Op_RetNC}, // fixme: 20 or 8 ?!
 	0xD1: {"POP DE			", 12, Op_POP_DE},
 	0xD2: {"JP NC, a16		", 12, Op_JP_NC}, // fixme: can be 12 or 16
@@ -212,7 +212,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xD8: {"RET C			", 8, Op_RET_C}, // Fixme: can be 8 or 20
 	0xDA: {"JP C,a16		", 12, Op_JP_C_NN}, // Fixme: can be 12 or 16
 	0xDE: {"SBC A,d8		", 8, Op_SBC_A_d8},
-	0xDF: {"RST	18			", 16, Op_Rst18},
+	0xDF: {"RST	18			", 16, func(gb *GbCpu) { Op_Rst(gb, 0x18) }},
 	0xE0: {"LDH (a8), A		", 12, Op_LDHnA},
 	0xE1: {"POP HL			", 12, Op_POP_HL},
 	0xE2: {"LD (C), A		", 8, Op_LD_C_A},
@@ -222,7 +222,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xE9: {"JP (HL)			", 4, Op_JP_HL},
 	0xEA: {"LD (a16), A		", 16, Op_LD_a16_A},
 	0xEE: {"XOR d8			", 8, Op_XOR_d8},
-	0xEF: {"RST 28			", 16, Op_Rst28},
+	0xEF: {"RST 28			", 16, func(gb *GbCpu) { Op_Rst(gb, 0x28) }},
 	0xF0: {"LD A, (a8)		", 12, Op_LDHAn}, //
 	0xF1: {"POP AF			", 12, Op_POP_AF},
 	0xF3: {"DI				", 4, Op_DI},
@@ -842,26 +842,13 @@ func Op_CP_HL(gb *GbCpu) {
 	Do_Cp(gb, gb.Reg.A, val)
 }
 
-func Op_Rst8(gb *GbCpu) {
+func Op_Rst(gb *GbCpu, pc uint16) {
 	gb.Reg.PC++
 	gb.pushToStack(uint8(gb.Reg.PC >> 8 & 0xFF))
 	gb.pushToStack(uint8(gb.Reg.PC & 0xFF))
-	gb.Reg.PC = 0x8
+	gb.Reg.PC = pc
 }
 
-func Op_Rst18(gb *GbCpu) {
-	gb.Reg.PC++
-	gb.pushToStack(uint8(gb.Reg.PC >> 8 & 0xFF))
-	gb.pushToStack(uint8(gb.Reg.PC & 0xFF))
-	gb.Reg.PC = 0x18
-}
-
-func Op_Rst28(gb *GbCpu) {
-	gb.Reg.PC++
-	gb.pushToStack(uint8(gb.Reg.PC >> 8 & 0xFF))
-	gb.pushToStack(uint8(gb.Reg.PC & 0xFF))
-	gb.Reg.PC = 0x28
-}
 
 // Stolen from Cinoop
 func Op_DAA(gb *GbCpu) {
