@@ -96,6 +96,8 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_checkBit(gb, 0x00, gb.Reg.H)
 	case 0x45:
 		Cb_checkBit(gb, 0x00, gb.Reg.L)
+	case 0x46:
+		Cb_checkBitn(gb, 0x00, gb.Reg.H, gb.Reg.L)
 	case 0x47:
 		Cb_checkBit(gb, 0x00, gb.Reg.A)
 	case 0x48:
@@ -202,6 +204,8 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_ResetBit(0x00, &gb.Reg.A)
 	case 0x86:
 		Cb_res_16(gb, 0x00, gb.Reg.H, gb.Reg.L)
+	case 0x9E:
+		Cb_res_16(gb, 0x03, gb.Reg.H, gb.Reg.L)
 	case 0xBE:
 		Cb_res_16(gb, 0x07, gb.Reg.H, gb.Reg.L)
 	case 0xAF:
@@ -218,8 +222,6 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_ResetBit(0x06, &gb.Reg.H)
 	case 0xB5:
 		Cb_ResetBit(0x06, &gb.Reg.L)
-	case 0xDE:
-		Cb_SetHlpBit(gb, 0x03)
 	case 0xBF:
 		Cb_ResetBit(0x07, &gb.Reg.A)
 	case 0xC0:
@@ -248,6 +250,20 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_set(0x01, &gb.Reg.H)
 	case 0xCD:
 		Cb_set(0x01, &gb.Reg.L)
+	case 0xD8:
+		Cb_set(0x03, &gb.Reg.B)
+	case 0xD9:
+		Cb_set(0x03, &gb.Reg.C)
+	case 0xDA:
+		Cb_set(0x03, &gb.Reg.D)
+	case 0xDB:
+		Cb_set(0x03, &gb.Reg.E)
+	case 0xDC:
+		Cb_set(0x03, &gb.Reg.H)
+	case 0xDD:
+		Cb_set(0x03, &gb.Reg.L)
+	case 0xDE:
+		Cb_SetHlpBit(gb, 0x03)
 	case 0xEF:
 		Cb_set(0x05, &gb.Reg.A)
 	case 0xF0:
@@ -262,6 +278,20 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_set(0x06, &gb.Reg.H)
 	case 0xF5:
 		Cb_set(0x06, &gb.Reg.L)
+	case 0xF8:
+		Cb_set(0x07, &gb.Reg.B)
+	case 0xF9:
+		Cb_set(0x07, &gb.Reg.C)
+	case 0xFA:
+		Cb_set(0x07, &gb.Reg.D)
+	case 0xFB:
+		Cb_set(0x07, &gb.Reg.E)
+	case 0xFC:
+		Cb_set(0x07, &gb.Reg.H)
+	case 0xFD:
+		Cb_set(0x07, &gb.Reg.L)
+	case 0xFE:
+		Cb_SetHlpBit(gb, 0x07)
 	case 0xFF:
 		Cb_set(0x07, &gb.Reg.A)
 	default:
