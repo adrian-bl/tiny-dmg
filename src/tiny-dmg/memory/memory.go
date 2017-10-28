@@ -63,10 +63,6 @@ func (m *Memory) GetByte(addr uint16) byte {
 	if addr == RegJoypadInput {
 		return m.joypad.GetJoypadByte(m.memory[addr])
 	}
-	if addr == 0xFF85 || addr == 0xFFA0 {
-		fmt.Printf("TETRIS HACK\n")
-		return 1
-	}
 
 	if addr >= 0xE000 && (addr < 0xFE00) {
 		fmt.Printf("Implement me\n")
@@ -121,7 +117,12 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 	}
 
 	if RegDoDMA == addr {
-		panic(fmt.Errorf("DMA START: %X\n", val))
+		// FIXME: This isn't free. we should count up cycles
+		src := addr << 8 // val is divided by 0x100
+		for i := uint16(0) ; i < 0xA0; i++ {
+			m.memory[StartOamRange + i] = m.memory[src + i]
+		}
+		fmt.Printf("+++ DMA TRANSFER FROM %X DONE\n", src)
 	}
 
 	m.memory[addr] = val
