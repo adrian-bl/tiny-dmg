@@ -168,6 +168,8 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_checkBit(gb, 0x05, gb.Reg.H)
 	case 0x6D:
 		Cb_checkBit(gb, 0x05, gb.Reg.L)
+	case 0x6E:
+		Cb_checkBitn(gb, 0x05, gb.Reg.H, gb.Reg.L)
 	case 0x6F:
 		Cb_checkBit(gb, 0x05, gb.Reg.A)
 	case 0x70:
@@ -182,6 +184,8 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_checkBit(gb, 0x06, gb.Reg.H)
 	case 0x75:
 		Cb_checkBit(gb, 0x06, gb.Reg.L)
+	case 0x76:
+		Cb_checkBitn(gb, 0x06, gb.Reg.H, gb.Reg.L)
 	case 0x77:
 		Cb_checkBit(gb, 0x06, gb.Reg.A)
 	case 0x78:
