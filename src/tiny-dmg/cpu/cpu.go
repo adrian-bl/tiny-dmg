@@ -2,7 +2,6 @@ package cpu
 
 import (
 	"fmt"
-	"time"
 	"tiny-dmg/lcd"
 	"tiny-dmg/memory"
 )
@@ -41,7 +40,14 @@ type Registers struct {
 	PC uint16
 }
 
-func New(m *memory.Memory, l *lcd.Lcd) (gb GbCpu, err error) {
+func New(m *memory.Memory, l *lcd.Lcd) (gb *GbCpu, err error) {
+	gb = new(GbCpu)
+	gb.mem = m
+	gb.lcd = l
+	return
+}
+
+func (gb *GbCpu) PowerOn() {
 	gb.Reg.SP = 0xFFFE
 	gb.Reg.PC = 0x0100
 
@@ -51,64 +57,6 @@ func New(m *memory.Memory, l *lcd.Lcd) (gb GbCpu, err error) {
 	gb.Reg.E = 0xD8
 	gb.Reg.H = 0x01
 	gb.Reg.L = 0x4D
-
-	gb.mem = m
-	gb.lcd = l
-	return
-}
-
-func (gb *GbCpu) Boot() {
-	gb.mem.PowerOn()
-	gb.lcd.PowerOn()
-
-	fmt.Printf("Starting Z80 emulation, initial pc=%08X\n", gb.Reg.PC)
-
-	op := byte(0)
-	i := 1
-	for {
-		op = gb.mem.GetByte(gb.Reg.PC) // raw opcode from ROM
-		gb.OpCode = OpCodes[op]
-
-		fmt.Printf("%04X %02X                        SP=%04X      BC=%02X%02X       DE=%02X%02X    ", gb.Reg.PC, op, gb.Reg.SP, gb.Reg.B, gb.Reg.C, gb.Reg.D, gb.Reg.E)
-		fmt.Printf("HL=%02X%02X    A=%02X F=%02X [", gb.Reg.H, gb.Reg.L, gb.Reg.A, gb.Reg.F)
-		if gb.Reg.F&FlagZ != 0 {
-			fmt.Printf("Z")
-		} else {
-			fmt.Printf("-")
-		}
-		if gb.Reg.F&FlagN != 0 {
-			fmt.Printf("N")
-		} else {
-			fmt.Printf("-")
-		}
-		if gb.Reg.F&FlagH != 0 {
-			fmt.Printf("H")
-		} else {
-			fmt.Printf("-")
-		}
-		if gb.Reg.F&FlagC != 0 {
-			fmt.Printf("C")
-		} else {
-			fmt.Printf("-")
-		}
-
-		fmt.Printf("] c=%d ## %d, c=%d, LY(FF44) = %X, >> FIXME: STAT = %X (%X), LCDC=%02X, op=%s\n", gb.OpCode.ClockCycles, i, gb.ClockCycles, gb.mem.GetByte(0xFF44), gb.mem.GetByte(0xFF41), gb.mem.GetByte(0xFF41)&0x3, gb.mem.GetByte(0xFF40), gb.OpCode.Name)
-		i++
-
-		if gb.OpCode.Cback == nil {
-			for {
-				fmt.Printf("BREAKPOINT HIT AT %X -> WE ARE HANGING HERE....\n", gb.Reg.PC)
-				time.Sleep(100 * time.Second)
-			}
-		}
-
-		gb.OpCode.Cback(gb)
-		gb.ClockCycles += uint32(gb.OpCode.ClockCycles)
-
-		gb.lcd.Update(gb.OpCode.ClockCycles)
-
-	}
-
 }
 
 func (gb *GbCpu) pushToStack(b byte) {

@@ -5,6 +5,7 @@ import (
 	"tiny-dmg/cpu"
 	"tiny-dmg/joypad"
 	"tiny-dmg/lcd"
+	"tiny-dmg/machine"
 	"tiny-dmg/memory"
 	"tiny-dmg/rom"
 	"tiny-dmg/ui"
@@ -33,15 +34,19 @@ func main() {
 		panic(err)
 	}
 
-	go ui.Run(m, j)
-
-	fmt.Printf("Assembling machine...")
-	gb, err := cpu.New(m, l)
+	c, err := cpu.New(m, l)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("done! machine dump: %v\n", gb)
-	gb.Boot()
+	// Launch our simple UI
+	go ui.Run(m, j)
 
+	mach, err := machine.New(c, l, m)
+	if err != nil {
+		panic(err)
+	}
+
+	mach.PowerOn()
+	mach.Run()
 }
