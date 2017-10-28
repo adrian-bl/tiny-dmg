@@ -12,7 +12,7 @@ func Do_Inc_Uint8(gb *GbCpu, target *uint8) {
 		gb.Reg.F |= FlagZ
 	}
 
-	if (result & 0x0f) == 0x0f {
+	if (result & 0x0F) == 0x00 {
 		gb.Reg.F |= FlagH
 		fmt.Printf("-> HALF CARRY SET.")
 	}

@@ -38,7 +38,7 @@ func (mach *Machine) Run() {
 	i := 1
 	for {
 		op = mach.mem.GetByte(mach.cpu.Reg.PC) // raw opcode from ROM
-		mach.cpu.OpCode = cpu.OpCodes[op]
+		dbgopcode := cpu.OpCodes[op]
 
 		fmt.Printf("%04X %02X                        SP=%04X      BC=%02X%02X       DE=%02X%02X    ", mach.cpu.Reg.PC, op, mach.cpu.Reg.SP, mach.cpu.Reg.B, mach.cpu.Reg.C, mach.cpu.Reg.D, mach.cpu.Reg.E)
 		fmt.Printf("HL=%02X%02X    A=%02X F=%02X [", mach.cpu.Reg.H, mach.cpu.Reg.L, mach.cpu.Reg.A, mach.cpu.Reg.F)
@@ -63,20 +63,20 @@ func (mach *Machine) Run() {
 			fmt.Printf("-")
 		}
 
-		fmt.Printf("] c=%d ## %d, c=%d, LY(FF44) = %X, >> FIXME: STAT = %X (%X), LCDC=%02X, op=%s\n", mach.cpu.OpCode.ClockCycles, i, mach.cpu.ClockCycles, mach.mem.GetByte(0xFF44), mach.mem.GetByte(0xFF41), mach.mem.GetByte(0xFF41)&0x3, mach.mem.GetByte(0xFF40), mach.cpu.OpCode.Name)
+		fmt.Printf("] c=%d ## %d, c=%d, LY(FF44) = %X, >> FIXME: STAT = %X (%X), LCDC=%02X, op=%s\n", dbgopcode.ClockCycles, i, mach.cpu.ClockCycles, mach.mem.GetByte(0xFF44), mach.mem.GetByte(0xFF41), mach.mem.GetByte(0xFF41)&0x3, mach.mem.GetByte(0xFF40), dbgopcode.Name)
 		i++
 
-		if mach.cpu.OpCode.Cback == nil {
+		if dbgopcode.Callback == nil {
 			for {
 				fmt.Printf("BREAKPOINT HIT AT %X -> WE ARE HANGING HERE....\n", mach.cpu.Reg.PC)
 				time.Sleep(100 * time.Second)
 			}
 		}
 
-		mach.cpu.OpCode.Cback(mach.cpu)
-		mach.cpu.ClockCycles += uint32(mach.cpu.OpCode.ClockCycles)
+		cycles := mach.cpu.Execute(op)
 
-		mach.lcd.Update(mach.cpu.OpCode.ClockCycles)
+		mach.cpu.ClockCycles += uint32(cycles)
+		mach.lcd.Update(cycles)
 		mach.itr.Update(mach.cpu, mach.mem, mach.lcd)
 	}
 }

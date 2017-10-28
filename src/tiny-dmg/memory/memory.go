@@ -68,9 +68,9 @@ func (m *Memory) GetByte(addr uint16) byte {
 		fmt.Printf("Implement me\n")
 		panic(nil)
 	}
-if addr == 0xFF85 {
-	return 1
-}
+	if addr == 0xFF85 {
+		return 1
+	}
 	return m.memory[addr]
 }
 
@@ -121,8 +121,8 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 	if RegDoDMA == addr {
 		// FIXME: This isn't free. we should count up cycles
 		src := addr << 8 // val is divided by 0x100
-		for i := uint16(0) ; i < 0xA0; i++ {
-			m.memory[StartOamRange + i] = m.memory[src + i]
+		for i := uint16(0); i < 0xA0; i++ {
+			m.memory[StartOamRange+i] = m.memory[src+i]
 		}
 		fmt.Printf("+++ DMA TRANSFER FROM %X DONE\n", src)
 	}

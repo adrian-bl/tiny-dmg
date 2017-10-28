@@ -10,15 +10,15 @@ type GbCpu struct {
 	Reg               Registers
 	mem               *memory.Memory
 	ClockCycles       uint32
-	OpCode            OpEntry
 }
 
 const (
-	FlagZ    = uint8(1 << 7)
-	FlagN    = uint8(1 << 6)
-	FlagH    = uint8(1 << 5)
-	FlagC    = uint8(1 << 4)
-	FlagMask = uint8(FlagZ | FlagN | FlagH | FlagC)
+	FlagZ      = uint8(1 << 7)
+	FlagN      = uint8(1 << 6)
+	FlagH      = uint8(1 << 5)
+	FlagC      = uint8(1 << 4)
+	FlagMask   = uint8(FlagZ | FlagN | FlagH | FlagC)
+	FlagUnused = uint8(0xF)
 )
 
 const (
@@ -48,12 +48,24 @@ func (gb *GbCpu) PowerOn() {
 	gb.Reg.SP = 0xFFFE
 	gb.Reg.PC = 0x0100
 
-	gb.Reg.A = 0x01 // We are a 1stgen gameboy
-	gb.Reg.F = FlagZ | FlagH | FlagC
-	gb.Reg.C = 0x13
-	gb.Reg.E = 0xD8
-	gb.Reg.H = 0x01
-	gb.Reg.L = 0x4D
+	gb.Reg.A = 0x11
+	gb.Reg.F = 0x80
+	gb.Reg.B = 0x00
+	gb.Reg.C = 0x00
+	gb.Reg.D = 0x00
+	gb.Reg.E = 0x08
+	gb.Reg.H = 0x00
+	gb.Reg.L = 0x7C
+}
+
+func (gb *GbCpu) Execute(opcode uint8) uint8 {
+	oc := OpCodes[opcode]
+
+	oc.Callback(gb)
+
+	// Bit 0..3 are ALWAYS zero, even if the code set them
+	gb.Reg.F &^= FlagUnused
+	return oc.ClockCycles
 }
 
 func (gb *GbCpu) pushToStack(b byte) {
