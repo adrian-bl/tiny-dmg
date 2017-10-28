@@ -10,8 +10,8 @@ import (
 type GbCpu struct {
 	InterruptsEnabled bool
 	Reg               Registers
-	Mem               *memory.Memory
-	Lcd               *lcd.Lcd
+	mem               *memory.Memory
+	lcd               *lcd.Lcd
 	ClockCycles       uint32
 	OpCode            OpEntry
 }
@@ -52,18 +52,21 @@ func New(m *memory.Memory, l *lcd.Lcd) (gb GbCpu, err error) {
 	gb.Reg.H = 0x01
 	gb.Reg.L = 0x4D
 
-	gb.Mem = m
-	gb.Lcd = l
+	gb.mem = m
+	gb.lcd = l
 	return
 }
 
 func (gb *GbCpu) Boot() {
+	gb.mem.PowerOn()
+	gb.lcd.PowerOn()
+
 	fmt.Printf("Starting Z80 emulation, initial pc=%08X\n", gb.Reg.PC)
 
 	op := byte(0)
 	i := 1
 	for {
-		op = gb.Mem.GetByte(gb.Reg.PC) // raw opcode from ROM
+		op = gb.mem.GetByte(gb.Reg.PC) // raw opcode from ROM
 		gb.OpCode = OpCodes[op]
 
 		fmt.Printf("%04X %02X                        SP=%04X      BC=%02X%02X       DE=%02X%02X    ", gb.Reg.PC, op, gb.Reg.SP, gb.Reg.B, gb.Reg.C, gb.Reg.D, gb.Reg.E)
@@ -89,7 +92,7 @@ func (gb *GbCpu) Boot() {
 			fmt.Printf("-")
 		}
 
-		fmt.Printf("] c=%d ## %d, c=%d, LY(FF44) = %X, >> FIXME: STAT = %X (%X), LCDC=%02X, op=%s\n", gb.OpCode.ClockCycles, i, gb.ClockCycles, gb.Mem.GetByte(0xFF44), gb.Mem.GetByte(0xFF41), gb.Mem.GetByte(0xFF41)&0x3, gb.Mem.GetByte(0xFF40), gb.OpCode.Name)
+		fmt.Printf("] c=%d ## %d, c=%d, LY(FF44) = %X, >> FIXME: STAT = %X (%X), LCDC=%02X, op=%s\n", gb.OpCode.ClockCycles, i, gb.ClockCycles, gb.mem.GetByte(0xFF44), gb.mem.GetByte(0xFF41), gb.mem.GetByte(0xFF41)&0x3, gb.mem.GetByte(0xFF40), gb.OpCode.Name)
 		i++
 
 		if gb.OpCode.Cback == nil {
@@ -102,7 +105,7 @@ func (gb *GbCpu) Boot() {
 		gb.OpCode.Cback(gb)
 		gb.ClockCycles += uint32(gb.OpCode.ClockCycles)
 
-		gb.Lcd.Update(gb.OpCode.ClockCycles)
+		gb.lcd.Update(gb.OpCode.ClockCycles)
 
 	}
 
@@ -110,12 +113,12 @@ func (gb *GbCpu) Boot() {
 
 func (gb *GbCpu) pushToStack(b byte) {
 	gb.Reg.SP--
-	gb.Mem.WriteByte(gb.Reg.SP, b)
+	gb.mem.WriteByte(gb.Reg.SP, b)
 	fmt.Printf("STACK WRITE: %02X @%X\n", b, gb.Reg.SP)
 }
 
 func (gb *GbCpu) popFromStack() byte {
-	b := gb.Mem.GetByte(gb.Reg.SP)
+	b := gb.mem.GetByte(gb.Reg.SP)
 	fmt.Printf("STACK READ: %02X @%X\n", b, gb.Reg.SP)
 	gb.Reg.SP++
 	return b

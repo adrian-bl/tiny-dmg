@@ -5,7 +5,7 @@ import (
 )
 
 func Cb_Disp(gb *GbCpu) {
-	op := gb.Mem.GetByte(gb.Reg.PC + 1)
+	op := gb.mem.GetByte(gb.Reg.PC + 1)
 	fmt.Printf("-> CB %02X\n", op)
 
 	switch op {
@@ -253,9 +253,9 @@ func Cb_set(bit uint8, target *uint8) {
 
 func Cb_SetHlpBit(gb *GbCpu, bit uint8) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	val := gb.Mem.GetByte(addr)
+	val := gb.mem.GetByte(addr)
 	Cb_set(bit, &val)
-	gb.Mem.WriteByte(addr, val)
+	gb.mem.WriteByte(addr, val)
 }
 
 func Cb_SwapReg(flags *uint8, target *uint8) {
@@ -303,7 +303,7 @@ func Cb_sra(gb *GbCpu, target *uint8) {
 
 func Cb_checkBitn(gb *GbCpu, bit, h, l uint8) {
 	addr := uint16(h)<<8 + uint16(l)
-	val := uint8(gb.Mem.GetByte(addr))
+	val := uint8(gb.mem.GetByte(addr))
 	Cb_checkBit(gb, bit, val)
 }
 
@@ -378,6 +378,6 @@ func Cb_rr(gb *GbCpu, target *uint8, value uint8) {
 
 func Cb_res_16(gb *GbCpu, bit, h, l uint8) {
 	addr := uint16(h)<<8 + uint16(l)
-	val := gb.Mem.GetByte(addr) & ^(1 << bit)
-	gb.Mem.WriteByte(addr, val)
+	val := gb.mem.GetByte(addr) & ^(1 << bit)
+	gb.mem.WriteByte(addr, val)
 }

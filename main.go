@@ -36,8 +36,6 @@ func main() {
 	}
 
 	fmt.Printf("done! machine dump: %v\n", gb)
-	gb.Mem.PowerOn()
-	gb.Lcd.PowerOn()
 	gb.Boot()
 
 }

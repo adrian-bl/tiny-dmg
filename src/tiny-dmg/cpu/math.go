@@ -53,8 +53,8 @@ func Do_Dec_88(gb *GbCpu, target1 *uint8, target2 *uint8) {
 }
 
 func Do_Load_88(gb *GbCpu, target1 *uint8, target2 *uint8) {
-	*target1 = gb.Mem.GetByte(gb.Reg.PC + 1)
-	*target2 = gb.Mem.GetByte(gb.Reg.PC + 2)
+	*target1 = gb.mem.GetByte(gb.Reg.PC + 1)
+	*target2 = gb.mem.GetByte(gb.Reg.PC + 2)
 	gb.Reg.PC += 3
 }
 

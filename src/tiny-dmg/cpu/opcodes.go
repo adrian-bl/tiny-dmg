@@ -276,7 +276,7 @@ func Op_JP_HL(gb *GbCpu) {
 
 func Op_JPnz(gb *GbCpu) {
 	if gb.Reg.F&FlagZ == 0 {
-		add := int8(gb.Mem.GetByte(gb.Reg.PC + 1))
+		add := int8(gb.mem.GetByte(gb.Reg.PC + 1))
 		gb.Reg.PC += uint16(add)
 	}
 	gb.Reg.PC += 2
@@ -284,7 +284,7 @@ func Op_JPnz(gb *GbCpu) {
 
 func Op_JPz(gb *GbCpu) {
 	if gb.Reg.F&FlagZ != 0 {
-		add := int8(gb.Mem.GetByte(gb.Reg.PC + 1))
+		add := int8(gb.mem.GetByte(gb.Reg.PC + 1))
 		gb.Reg.PC += uint16(add)
 	}
 	gb.Reg.PC += 2
@@ -292,7 +292,7 @@ func Op_JPz(gb *GbCpu) {
 
 func Op_JP_Z_NN(gb *GbCpu) {
 	if gb.Reg.F&FlagZ != 0 {
-		addr := uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + uint16(gb.Mem.GetByte(gb.Reg.PC+2))<<8
+		addr := uint16(gb.mem.GetByte(gb.Reg.PC+1)) + uint16(gb.mem.GetByte(gb.Reg.PC+2))<<8
 		gb.Reg.PC = addr
 	} else {
 		gb.Reg.PC += 3
@@ -301,7 +301,7 @@ func Op_JP_Z_NN(gb *GbCpu) {
 
 func Op_JP_C_NN(gb *GbCpu) {
 	if gb.Reg.F&FlagC != 0 {
-		addr := uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + uint16(gb.Mem.GetByte(gb.Reg.PC+2))<<8
+		addr := uint16(gb.mem.GetByte(gb.Reg.PC+1)) + uint16(gb.mem.GetByte(gb.Reg.PC+2))<<8
 		gb.Reg.PC = addr
 	} else {
 		gb.Reg.PC += 3
@@ -309,7 +309,7 @@ func Op_JP_C_NN(gb *GbCpu) {
 }
 
 func Op_CPd8(gb *GbCpu) {
-	val := gb.Mem.GetByte(gb.Reg.PC + 1)
+	val := gb.mem.GetByte(gb.Reg.PC + 1)
 
 	gb.Reg.F &= ^FlagMask // clear all bits
 	gb.Reg.F |= FlagN     // this is always set
@@ -350,8 +350,8 @@ func Op_RLCA(gb *GbCpu) {
 }
 
 func Op_LDHAn(gb *GbCpu) {
-	src := uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + 0xFF00
-	gb.Reg.A = gb.Mem.GetByte(src)
+	src := uint16(gb.mem.GetByte(gb.Reg.PC+1)) + 0xFF00
+	gb.Reg.A = gb.mem.GetByte(src)
 	fmt.Printf("READ %04X from %04X\n", gb.Reg.A, src)
 	gb.Reg.PC += 2
 }
@@ -429,95 +429,95 @@ func Op_POP_DE(gb *GbCpu) {
 
 func Op_DEC_HL(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	val := gb.Mem.GetByte(addr)
+	val := gb.mem.GetByte(addr)
 	Do_Dec_Uint8(gb, &val)
-	gb.Mem.WriteByte(addr, val)
+	gb.mem.WriteByte(addr, val)
 }
 
 func Op_INC_HL(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	val := gb.Mem.GetByte(addr)
+	val := gb.mem.GetByte(addr)
 	Do_Inc_Uint8(gb, &val)
-	gb.Mem.WriteByte(addr, val)
+	gb.mem.WriteByte(addr, val)
 }
 
 // 0xe6 AND A, n
 func Op_ANDAn(gb *GbCpu) {
-	val := gb.Mem.GetByte(gb.Reg.PC + 1)
+	val := gb.mem.GetByte(gb.Reg.PC + 1)
 	Do_And_88(gb, &gb.Reg.A, val)
 	gb.Reg.PC++ // +1 because we read one byte
 }
 
 // 0xe6 AND A, n
 func Op_SUB_d8(gb *GbCpu) {
-	val := gb.Mem.GetByte(gb.Reg.PC + 1)
+	val := gb.mem.GetByte(gb.Reg.PC + 1)
 	Do_Sub_88(gb, &gb.Reg.A, val)
 	gb.Reg.PC++ // +1 because we read one byte
 }
 
 func Op_SBC_A_d8(gb *GbCpu) {
-	val := gb.Mem.GetByte(gb.Reg.PC + 1)
+	val := gb.mem.GetByte(gb.Reg.PC + 1)
 	Do_Sbc_88(gb, &gb.Reg.A, val)
 	gb.Reg.PC++ // +1 because we read one byte
 }
 
 func Op_LDHnA(gb *GbCpu) {
-	dst := uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + 0xFF00
+	dst := uint16(gb.mem.GetByte(gb.Reg.PC+1)) + 0xFF00
 
-	old := gb.Mem.GetByte(dst)
-	gb.Mem.WriteByte(dst, gb.Reg.A)
+	old := gb.mem.GetByte(dst)
+	gb.mem.WriteByte(dst, gb.Reg.A)
 	gb.Reg.PC += 2
-	fmt.Printf("WROTE %04X to %04X, it was %04X\n", gb.Mem.GetByte(dst), dst, old)
+	fmt.Printf("WROTE %04X to %04X, it was %04X\n", gb.mem.GetByte(dst), dst, old)
 }
 
 func Op_LDAn(gb *GbCpu) {
-	gb.Reg.A = gb.Mem.GetByte(gb.Reg.PC + 1)
+	gb.Reg.A = gb.mem.GetByte(gb.Reg.PC + 1)
 	gb.Reg.PC += 2
 }
 
 func Op_LDBn(gb *GbCpu) {
-	gb.Reg.B = gb.Mem.GetByte(gb.Reg.PC + 1)
+	gb.Reg.B = gb.mem.GetByte(gb.Reg.PC + 1)
 	gb.Reg.PC += 2
 }
 
 func Op_LDCn(gb *GbCpu) {
-	gb.Reg.C = gb.Mem.GetByte(gb.Reg.PC + 1)
+	gb.Reg.C = gb.mem.GetByte(gb.Reg.PC + 1)
 	gb.Reg.PC += 2
 }
 
 func Op_LDDn(gb *GbCpu) {
-	gb.Reg.D = gb.Mem.GetByte(gb.Reg.PC + 1)
+	gb.Reg.D = gb.mem.GetByte(gb.Reg.PC + 1)
 	gb.Reg.PC += 2
 }
 
 func Op_LDEn(gb *GbCpu) {
-	gb.Reg.E = gb.Mem.GetByte(gb.Reg.PC + 1)
+	gb.Reg.E = gb.mem.GetByte(gb.Reg.PC + 1)
 	gb.Reg.PC += 2
 }
 
 // Put value of A into location specified by DE
 func Op_LD_DE_A(gb *GbCpu) {
 	addr := uint16(gb.Reg.D)<<8 + uint16(gb.Reg.E)
-	gb.Mem.WriteByte(addr, gb.Reg.A)
+	gb.mem.WriteByte(addr, gb.Reg.A)
 	gb.Reg.PC++
 }
 
 func Op_LD_BC_A(gb *GbCpu) {
 	addr := uint16(gb.Reg.B)<<8 + uint16(gb.Reg.C)
-	gb.Mem.WriteByte(addr, gb.Reg.A)
+	gb.mem.WriteByte(addr, gb.Reg.A)
 	gb.Reg.PC++
 }
 
 func Op_LD_HL_d8(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	val := gb.Mem.GetByte(gb.Reg.PC + 1)
-	gb.Mem.WriteByte(addr, val)
+	val := gb.mem.GetByte(gb.Reg.PC + 1)
+	gb.mem.WriteByte(addr, val)
 	gb.Reg.PC += 2
 }
 
 func Op_LD_HL_SP_r8(gb *GbCpu) {
 	gb.Reg.F &= ^FlagMask
-	operand := gb.Mem.GetByte(gb.Reg.PC + 1)
+	operand := gb.mem.GetByte(gb.Reg.PC + 1)
 	val := uint32(gb.Reg.SP) + uint32(operand)
 
 	if val&0xFFFF0000 != 0 {
@@ -544,30 +544,30 @@ func Op_LD_SP_HL(gb *GbCpu) {
 }
 
 func Op_LD_C_A(gb *GbCpu) {
-	gb.Mem.WriteByte(0xFF00+uint16(gb.Reg.C), gb.Reg.A)
+	gb.mem.WriteByte(0xFF00+uint16(gb.Reg.C), gb.Reg.A)
 	gb.Reg.PC++
 }
 
 func Op_LD_A_a16(gb *GbCpu) {
-	addr := uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + uint16(gb.Mem.GetByte(gb.Reg.PC+2))<<8
-	gb.Reg.A = gb.Mem.GetByte(addr)
+	addr := uint16(gb.mem.GetByte(gb.Reg.PC+1)) + uint16(gb.mem.GetByte(gb.Reg.PC+2))<<8
+	gb.Reg.A = gb.mem.GetByte(addr)
 	gb.Reg.PC += 3
 }
 
 func Op_LD_a16_A(gb *GbCpu) {
-	addr := uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + uint16(gb.Mem.GetByte(gb.Reg.PC+2))<<8
-	gb.Mem.WriteByte(addr, gb.Reg.A)
+	addr := uint16(gb.mem.GetByte(gb.Reg.PC+1)) + uint16(gb.mem.GetByte(gb.Reg.PC+2))<<8
+	gb.mem.WriteByte(addr, gb.Reg.A)
 	gb.Reg.PC += 3
 	fmt.Printf("LD %X -> %X\n", addr, gb.Reg.A)
 }
 
 func Op_LD_H_n(gb *GbCpu) {
-	gb.Reg.H = gb.Mem.GetByte(gb.Reg.PC + 1)
+	gb.Reg.H = gb.mem.GetByte(gb.Reg.PC + 1)
 	gb.Reg.PC += 2
 }
 
 func Op_LD_L_n(gb *GbCpu) {
-	gb.Reg.L = gb.Mem.GetByte(gb.Reg.PC + 1)
+	gb.Reg.L = gb.mem.GetByte(gb.Reg.PC + 1)
 	gb.Reg.PC += 2
 }
 
@@ -582,87 +582,87 @@ func Op_LD_BC_nn(gb *GbCpu) {
 }
 
 func Op_LD_SP_nn(gb *GbCpu) {
-	gb.Reg.SP = uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + uint16(gb.Mem.GetByte(gb.Reg.PC+2))<<8
+	gb.Reg.SP = uint16(gb.mem.GetByte(gb.Reg.PC+1)) + uint16(gb.mem.GetByte(gb.Reg.PC+2))<<8
 	gb.Reg.PC += 3
 }
 
 func Op_SUB_A_HL(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	Do_Sub_88(gb, &gb.Reg.A, gb.Mem.GetByte(addr))
+	Do_Sub_88(gb, &gb.Reg.A, gb.mem.GetByte(addr))
 }
 
 func Op_SBC_A_HL(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	Do_Sbc_88(gb, &gb.Reg.A, gb.Mem.GetByte(addr))
+	Do_Sbc_88(gb, &gb.Reg.A, gb.mem.GetByte(addr))
 }
 
 func Op_ADC_A_HL(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	Do_Adc_88(gb, &gb.Reg.A, gb.Mem.GetByte(addr))
+	Do_Adc_88(gb, &gb.Reg.A, gb.mem.GetByte(addr))
 }
 
 func Op_ADD_A_HL(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	Do_Add_88(gb, &gb.Reg.A, gb.Mem.GetByte(addr))
+	Do_Add_88(gb, &gb.Reg.A, gb.mem.GetByte(addr))
 }
 
 func Op_LD_A_HL(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	gb.Reg.A = gb.Mem.GetByte(addr)
+	gb.Reg.A = gb.mem.GetByte(addr)
 	gb.Reg.PC++
 }
 
 func Op_LD_B_HL(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	gb.Reg.B = gb.Mem.GetByte(addr)
+	gb.Reg.B = gb.mem.GetByte(addr)
 	gb.Reg.PC++
 }
 
 func Op_LD_C_HL(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	gb.Reg.C = gb.Mem.GetByte(addr)
+	gb.Reg.C = gb.mem.GetByte(addr)
 	gb.Reg.PC++
 }
 
 func Op_LD_D_HL(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	gb.Reg.D = gb.Mem.GetByte(addr)
+	gb.Reg.D = gb.mem.GetByte(addr)
 	gb.Reg.PC++
 }
 
 func Op_LD_E_HL(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	gb.Reg.E = gb.Mem.GetByte(addr)
+	gb.Reg.E = gb.mem.GetByte(addr)
 	gb.Reg.PC++
 }
 
 func Op_LD_H_HL(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	gb.Reg.H = gb.Mem.GetByte(addr)
+	gb.Reg.H = gb.mem.GetByte(addr)
 	gb.Reg.PC++
 }
 
 func Op_LD_L_HL(gb *GbCpu) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	gb.Reg.L = gb.Mem.GetByte(addr)
+	gb.Reg.L = gb.mem.GetByte(addr)
 	gb.Reg.PC++
 }
 
 func Op_LD_A_BC(gb *GbCpu) {
 	addr := uint16(gb.Reg.B)<<8 + uint16(gb.Reg.C)
-	gb.Reg.A = gb.Mem.GetByte(addr)
+	gb.Reg.A = gb.mem.GetByte(addr)
 	gb.Reg.PC++
 }
 
 func Op_LD_A_DE(gb *GbCpu) {
 	addr := uint16(gb.Reg.D)<<8 + uint16(gb.Reg.E)
-	gb.Reg.A = gb.Mem.GetByte(addr)
+	gb.Reg.A = gb.mem.GetByte(addr)
 	gb.Reg.PC++
 }
 
 func Op_LD_A_HLi(gb *GbCpu) {
 	val := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	gb.Reg.A = gb.Mem.GetByte(val)
+	gb.Reg.A = gb.mem.GetByte(val)
 	val++
 	gb.Reg.L = uint8(val & 0xFF)
 	gb.Reg.H = uint8((val >> 8 & 0xFF))
@@ -672,7 +672,7 @@ func Op_LD_A_HLi(gb *GbCpu) {
 // Put value of A into location specified by HL, increment HL
 func Op_LDI_HL_A(gb *GbCpu) {
 	val := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	gb.Mem.WriteByte(val, gb.Reg.A)
+	gb.mem.WriteByte(val, gb.Reg.A)
 	val++
 	gb.Reg.L = uint8(val & 0xFF)
 	gb.Reg.H = uint8((val >> 8 & 0xFF))
@@ -682,7 +682,7 @@ func Op_LDI_HL_A(gb *GbCpu) {
 // Put value of A into location specified by HL, decrement HL
 func Op_LDD_HL_A(gb *GbCpu) {
 	val := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	gb.Mem.WriteByte(val, gb.Reg.A)
+	gb.mem.WriteByte(val, gb.Reg.A)
 	val--
 	gb.Reg.L = uint8(val & 0xFF)
 	gb.Reg.H = uint8((val >> 8 & 0xFF))
@@ -692,7 +692,7 @@ func Op_LDD_HL_A(gb *GbCpu) {
 // Store value specified by HL in A, decrement HL
 func Op_LD_A_HLdec(gb *GbCpu) {
 	val := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	gb.Reg.A = gb.Mem.GetByte(val)
+	gb.Reg.A = gb.mem.GetByte(val)
 	val--
 	gb.Reg.L = uint8(val & 0xFF)
 	gb.Reg.H = uint8((val >> 8 & 0xFF))
@@ -701,7 +701,7 @@ func Op_LD_A_HLdec(gb *GbCpu) {
 
 func Op_LD_HL_x(gb *GbCpu, value uint8) {
 	addr := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	gb.Mem.WriteByte(addr, value)
+	gb.mem.WriteByte(addr, value)
 	gb.Reg.PC++
 }
 
@@ -733,7 +733,7 @@ func Op_ADD_HL_HL(gb *GbCpu) {
 
 func Op_ADD_SP_n(gb *GbCpu) {
 	gb.Reg.PC++
-	val := uint16(int8(gb.Mem.GetByte(gb.Reg.PC)))
+	val := uint16(int8(gb.mem.GetByte(gb.Reg.PC)))
 	Do_Add_1616(gb, &gb.Reg.SP, val)
 
 	// unlike raw add_1616, this does always clear
@@ -742,7 +742,7 @@ func Op_ADD_SP_n(gb *GbCpu) {
 }
 
 func Op_ADD_A_n(gb *GbCpu) {
-	val := gb.Mem.GetByte(gb.Reg.PC + 1)
+	val := gb.mem.GetByte(gb.Reg.PC + 1)
 	Do_Add_88(gb, &gb.Reg.A, val)
 	gb.Reg.PC++
 }
@@ -763,7 +763,7 @@ func Op_JP_NC(gb *GbCpu) {
 	if (gb.Reg.F & FlagC) != 0 {
 		gb.Reg.PC += 3
 	} else {
-		gb.Reg.PC = uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + uint16(gb.Mem.GetByte(gb.Reg.PC+2))<<8
+		gb.Reg.PC = uint16(gb.mem.GetByte(gb.Reg.PC+1)) + uint16(gb.mem.GetByte(gb.Reg.PC+2))<<8
 	}
 }
 
@@ -771,22 +771,22 @@ func Op_JP_NZ(gb *GbCpu) {
 	if (gb.Reg.F & FlagZ) != 0 {
 		gb.Reg.PC += 3
 	} else {
-		gb.Reg.PC = uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + uint16(gb.Mem.GetByte(gb.Reg.PC+2))<<8
+		gb.Reg.PC = uint16(gb.mem.GetByte(gb.Reg.PC+1)) + uint16(gb.mem.GetByte(gb.Reg.PC+2))<<8
 	}
 }
 
 func Op_JP(gb *GbCpu) {
-	gb.Reg.PC = uint16(gb.Mem.GetByte(gb.Reg.PC+1)) + uint16(gb.Mem.GetByte(gb.Reg.PC+2))<<8
+	gb.Reg.PC = uint16(gb.mem.GetByte(gb.Reg.PC+1)) + uint16(gb.mem.GetByte(gb.Reg.PC+2))<<8
 }
 
 func Op_JR_n(gb *GbCpu) {
-	add := int8(gb.Mem.GetByte(gb.Reg.PC + 1))
+	add := int8(gb.mem.GetByte(gb.Reg.PC + 1))
 	gb.Reg.PC += 2 + uint16(add)
 }
 
 func Op_JR_C_n(gb *GbCpu) {
 	if gb.Reg.F&FlagC != 0 {
-		add := int8(gb.Mem.GetByte(gb.Reg.PC + 1))
+		add := int8(gb.mem.GetByte(gb.Reg.PC + 1))
 		gb.Reg.PC += uint16(add)
 	}
 	gb.Reg.PC += 2
@@ -794,7 +794,7 @@ func Op_JR_C_n(gb *GbCpu) {
 
 func Op_JR_NC_r8(gb *GbCpu) {
 	if gb.Reg.F&FlagC == 0 {
-		add := int8(gb.Mem.GetByte(gb.Reg.PC + 1))
+		add := int8(gb.mem.GetByte(gb.Reg.PC + 1))
 		gb.Reg.PC += uint16(add)
 	}
 	gb.Reg.PC += 2
@@ -811,26 +811,26 @@ func Op_NOP(gb *GbCpu) {
 }
 
 func Op_OR_n(gb *GbCpu) {
-	val := gb.Mem.GetByte(gb.Reg.PC + 1)
+	val := gb.mem.GetByte(gb.Reg.PC + 1)
 	Do_Or_88(gb, &gb.Reg.A, val)
 	gb.Reg.PC++
 }
 
 func Op_OR_HL(gb *GbCpu) {
 	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	val := gb.Mem.GetByte(hl)
+	val := gb.mem.GetByte(hl)
 	Do_Or_88(gb, &gb.Reg.A, val)
 }
 
 func Op_XOR_HL(gb *GbCpu) {
 	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	val := gb.Mem.GetByte(hl)
+	val := gb.mem.GetByte(hl)
 	Do_Xor_88(gb, &gb.Reg.A, val)
 }
 
 func Op_CP_HL(gb *GbCpu) {
 	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
-	val := gb.Mem.GetByte(hl)
+	val := gb.mem.GetByte(hl)
 	Do_Cp(gb, gb.Reg.A, val)
 }
 
@@ -917,13 +917,13 @@ func Op_CCF(gb *GbCpu) {
 }
 
 func Op_ADC_A_d8(gb *GbCpu) {
-	val := gb.Mem.GetByte(gb.Reg.PC + 1)
+	val := gb.mem.GetByte(gb.Reg.PC + 1)
 	Do_Adc_88(gb, &gb.Reg.A, val)
 	gb.Reg.PC++
 }
 
 func Op_XOR_d8(gb *GbCpu) {
-	val := gb.Mem.GetByte(gb.Reg.PC + 1)
+	val := gb.mem.GetByte(gb.Reg.PC + 1)
 	Do_Xor_88(gb, &gb.Reg.A, val)
 	gb.Reg.PC++ // +1 because we read one byte
 }
