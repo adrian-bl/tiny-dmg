@@ -2,7 +2,6 @@ package cpu
 
 import (
 	"fmt"
-	"tiny-dmg/lcd"
 	"tiny-dmg/memory"
 )
 
@@ -10,7 +9,6 @@ type GbCpu struct {
 	InterruptsEnabled bool
 	Reg               Registers
 	mem               *memory.Memory
-	lcd               *lcd.Lcd
 	ClockCycles       uint32
 	OpCode            OpEntry
 }
@@ -40,10 +38,9 @@ type Registers struct {
 	PC uint16
 }
 
-func New(m *memory.Memory, l *lcd.Lcd) (gb *GbCpu, err error) {
+func New(m *memory.Memory) (gb *GbCpu, err error) {
 	gb = new(GbCpu)
 	gb.mem = m
-	gb.lcd = l
 	return
 }
 

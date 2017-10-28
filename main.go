@@ -34,7 +34,7 @@ func main() {
 		panic(err)
 	}
 
-	c, err := cpu.New(m, l)
+	c, err := cpu.New(m)
 	if err != nil {
 		panic(err)
 	}
