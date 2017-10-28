@@ -67,6 +67,12 @@ func (m *Memory) GetByte(addr uint16) byte {
 		fmt.Printf("TETRIS HACK\n")
 		return 1
 	}
+
+	if addr >= 0xE000 && (addr < 0xFE00) {
+		fmt.Printf("Implement me\n")
+		panic(nil)
+	}
+
 	return m.memory[addr]
 }
 
