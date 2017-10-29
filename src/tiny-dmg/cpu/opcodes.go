@@ -187,6 +187,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xB7: {"OR A			", 4, func(gb *GbCpu) { Do_Or_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xB8: {"CP B			", 4, func(gb *GbCpu) { Do_Cp(gb, gb.Reg.A, gb.Reg.B) }},
 	0xB9: {"CP C			", 4, func(gb *GbCpu) { Do_Cp(gb, gb.Reg.A, gb.Reg.C) }},
+	0xBA: {"CP D			", 4, func(gb *GbCpu) { Do_Cp(gb, gb.Reg.A, gb.Reg.D) }},
 	0xBB: {"CP E			", 4, func(gb *GbCpu) { Do_Cp(gb, gb.Reg.A, gb.Reg.E) }},
 	0xBE: {"CP (HL)			", 8, Op_CP_HL},
 	0xC0: {"RET NZ			", 8, Op_RET_NZ}, // Fixme: can be 8 or 20
@@ -856,37 +857,62 @@ func Op_Rst(gb *GbCpu, pc uint16) {
 	gb.Reg.PC = pc
 }
 
-// Stolen from Cinoop
+// Stolen from Sameboy's z80_cpu.c:319
+// Would https://forums.nesdev.com/viewtopic.php?f=20&t=15944 also work?
 func Op_DAA(gb *GbCpu) {
-	s := uint16(gb.Reg.A)
+	a := gb.Reg.A
+	f := gb.Reg.F & (FlagN | FlagC) // FlagN is not touched
 
 	if gb.Reg.F&FlagN != 0 {
+		fmt.Printf("HERE\n")
 		if gb.Reg.F&FlagH != 0 {
-			s = (s - 0x06) & 0xFF
-		}
-		if gb.Reg.F&FlagH != 0 {
-			s -= 0x60
+			gb.Reg.F &^= FlagH
+			if gb.Reg.F&FlagC != 0 {
+				a += 0x9A
+			} else {
+				a += 0xFA
+			}
+		} else if gb.Reg.F&FlagC != 0 {
+			a += 0xA0
 		}
 	} else {
-		if gb.Reg.F&FlagH != 0 || (s&0xF) > 9 {
-			s += 0x06
+		n := uint16(a)
+
+		if gb.Reg.F&FlagC != 0 {
+			n += 0x100
 		}
-		if gb.Reg.F&FlagH != 0 || s > 0x9F {
-			s += 0x60
+		if gb.Reg.F&FlagH != 0 {
+			n += 0x06
+			if n >= 0xA0 {
+				n -= 0xA0
+				f |= FlagC
+			}
+
+		} else {
+			if n > 0x99 {
+				n += 0x60
+			}
+			// WTF?!
+			wtf := uint16(0)
+			if n&0x0F > 9 {
+				wtf = 6
+			}
+			n = (n & 0x0F) + wtf + (n & 0xFF0)
+			if n&0xFF00 != 0 {
+				f |= FlagC
+			}
 		}
+		a = uint8(n)
 	}
 
-	gb.Reg.A = uint8(s)
-	gb.Reg.F &= ^(FlagH | FlagZ)
-
-	if gb.Reg.A == 0 {
-		gb.Reg.F |= FlagZ
-	}
-	if s >= 0x100 {
-		gb.Reg.F |= FlagC
+	if a == 0 {
+		f |= FlagZ
 	}
 
+	gb.Reg.A = a
+	gb.Reg.F = f
 	gb.Reg.PC++
+
 }
 
 func Op_RRA(gb *GbCpu) {

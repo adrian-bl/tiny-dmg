@@ -31,7 +31,7 @@ func (mach *Machine) PowerOn() {
 	mach.cpu.PowerOn()
 }
 
-var XLOG = "mgba"
+var XLOG = "verbose"
 
 func (mach *Machine) Run() {
 	fmt.Printf("Starting Z80 emulation, initial pc=%08X\n", mach.cpu.Reg.PC)
@@ -43,7 +43,7 @@ func (mach *Machine) Run() {
 		dbgopcode := cpu.OpCodes[op]
 
 		if XLOG == "verbose" {
-			fmt.Printf("%04X %02X AF=%02X%02X      BC=%02X%02X       DE=%02X%02X    ", mach.cpu.Reg.PC, mach.cpu.Reg.A, mach.cpu.Reg.F, mach.cpu.Reg.B, mach.cpu.Reg.C, mach.cpu.Reg.D, mach.cpu.Reg.E)
+			fmt.Printf("%04X %02X      AF=%02X%02X    BC=%02X%02X    DE=%02X%02X    ", mach.cpu.Reg.PC, op, mach.cpu.Reg.A, mach.cpu.Reg.F, mach.cpu.Reg.B, mach.cpu.Reg.C, mach.cpu.Reg.D, mach.cpu.Reg.E)
 			fmt.Printf("HL=%02X%02X   SP=%04X [", mach.cpu.Reg.H, mach.cpu.Reg.L, mach.cpu.Reg.SP)
 			if mach.cpu.Reg.F&cpu.FlagZ != 0 {
 				fmt.Printf("Z")

@@ -417,25 +417,26 @@ func Cb_rl(gb *GbCpu, target *uint8, value uint8) {
 	*target = value
 }
 
+// 9 bit rotation to right
 func Cb_rr(gb *GbCpu, target *uint8, value uint8) {
+	carry := uint8(0)
+	bit0 := (value & 0x1) != 0
+
+	if gb.Reg.F&FlagC != 0 {
+		carry = 1 << 7 // carry is copied to bit 7
+	}
+
 	gb.Reg.F &= ^FlagMask
-	// FIXME: rr 0xFF on mgba leads to 0xff, we do 0x7f...
-	*target >>= 1
-	if (gb.Reg.F & FlagH) != 0 {
-		*target |= 0x80
-	}
+	value = (value >> 1) | carry
 
-	if *target&0x01 != 0 {
+	if bit0 {
 		gb.Reg.F |= FlagC
-	} else {
-		gb.Reg.F &= ^FlagC
 	}
-
-	if *target != 0 {
-		gb.Reg.F &= ^FlagZ
-	} else {
+	if value == 0 {
 		gb.Reg.F |= FlagZ
 	}
+
+	*target = value
 }
 
 func Cb_res_16(gb *GbCpu, bit, h, l uint8) {
