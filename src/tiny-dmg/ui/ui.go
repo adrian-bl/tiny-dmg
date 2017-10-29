@@ -7,7 +7,6 @@ import (
 	"image/color"
 	"log"
 	"runtime"
-	"sync"
 	"time"
 	"tiny-dmg/joypad"
 	"tiny-dmg/memory"
@@ -20,17 +19,16 @@ const (
 
 func Run(m *memory.Memory, j *joypad.Joypad) {
 	//go loop(m)
-	go mapView(m, 0x9800)
-	go mapView(m, 0x9C00)
+	go mapView(m, 0x9800, j)
+	go mapView(m, 0x9C00, j)
 	go tileView(m)
 	go sprites(m)
-	go loop(j)
 	wde.Run()
 	log.Panic("wde run exited!")
 }
 
 // mapView displays a tilemap
-func mapView(m *memory.Memory, memoff int) {
+func mapView(m *memory.Memory, memoff int, j *joypad.Joypad) {
 	dw, err := wde.NewWindow(width, height)
 	if err != nil {
 		fmt.Println(err)
@@ -39,6 +37,8 @@ func mapView(m *memory.Memory, memoff int) {
 	dw.SetTitle(fmt.Sprintf("MAP:%X - tinydmg!", memoff))
 	dw.SetSize(width, height)
 	dw.Show()
+
+	go captureInput(dw, j)
 
 	s := dw.Screen()
 	for {
@@ -106,84 +106,58 @@ func tileView(m *memory.Memory) {
 	}
 }
 
-func loop(j *joypad.Joypad) {
-	var wg sync.WaitGroup
+func captureInput(dw wde.Window, j *joypad.Joypad) {
+	events := dw.EventChan()
 
-	x := func() {
-		dw, err := wde.NewWindow(width, height)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		dw.SetTitle("event input field")
-		dw.SetSize(width, height)
-		dw.Show()
-
-		events := dw.EventChan()
-
-		done := make(chan bool)
-
-		go func() {
-		loop:
-			for ei := range events {
-				runtime.Gosched()
-				switch e := ei.(type) {
-				case wde.KeyDownEvent:
-					switch e.Key {
-					case "right_arrow":
-						j.KeyRight = true
-					case "left_arrow":
-						j.KeyLeft = true
-					case "up_arrow":
-						j.KeyUp = true
-					case "down_arrow":
-						j.KeyDown = true
-					case "return":
-						j.ButtonStart = true
-					case "a":
-						j.ButtonA = true
-					case "s":
-						j.ButtonB = true
-					case "space":
-						j.ButtonSelect = true
-					}
-				case wde.KeyUpEvent:
-					switch e.Key {
-					case "right_arrow":
-						j.KeyRight = false
-					case "left_arrow":
-						j.KeyLeft = false
-					case "up_arrow":
-						j.KeyUp = false
-					case "down_arrow":
-						j.KeyDown = false
-					case "return":
-						j.ButtonStart = false
-					case "a":
-						j.ButtonA = false
-					case "s":
-						j.ButtonB = false
-					case "space":
-						j.ButtonSelect = false
-					}
-				case wde.CloseEvent:
-					fmt.Println("close")
-					dw.Close()
-					break loop
-				case wde.ResizeEvent:
-					fmt.Println("resize", e.Width, e.Height)
-				}
+	for ei := range events {
+		runtime.Gosched()
+		switch e := ei.(type) {
+		case wde.KeyDownEvent:
+			switch e.Key {
+			case "right_arrow":
+				j.KeyRight = true
+			case "left_arrow":
+				j.KeyLeft = true
+			case "up_arrow":
+				j.KeyUp = true
+			case "down_arrow":
+				j.KeyDown = true
+			case "return":
+				j.ButtonStart = true
+			case "a":
+				j.ButtonA = true
+			case "s":
+				j.ButtonB = true
+			case "space":
+				j.ButtonSelect = true
 			}
-			done <- true
-			fmt.Println("end of events")
-		}()
-
+		case wde.KeyUpEvent:
+			switch e.Key {
+			case "right_arrow":
+				j.KeyRight = false
+			case "left_arrow":
+				j.KeyLeft = false
+			case "up_arrow":
+				j.KeyUp = false
+			case "down_arrow":
+				j.KeyDown = false
+			case "return":
+				j.ButtonStart = false
+			case "a":
+				j.ButtonA = false
+			case "s":
+				j.ButtonB = false
+			case "space":
+				j.ButtonSelect = false
+			}
+		case wde.CloseEvent:
+			fmt.Println("close")
+			dw.Close()
+			break
+		case wde.ResizeEvent:
+			fmt.Println("resize", e.Width, e.Height)
+		}
 	}
-	wg.Add(1)
-	go x()
-
-	wg.Wait()
-	wde.Stop()
 }
 
 func drawTile(s wde.Image, m *memory.Memory, taddr uint16, x, y int) {
