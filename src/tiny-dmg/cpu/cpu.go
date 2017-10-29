@@ -48,14 +48,14 @@ func (gb *GbCpu) PowerOn() {
 	gb.Reg.SP = 0xFFFE
 	gb.Reg.PC = 0x0100
 
-	gb.Reg.A = 0x11
-	gb.Reg.F = 0x80
+	gb.Reg.A = 0x01
+	gb.Reg.F = 0xb0
 	gb.Reg.B = 0x00
-	gb.Reg.C = 0x00
+	gb.Reg.C = 0x13
 	gb.Reg.D = 0x00
-	gb.Reg.E = 0x08
-	gb.Reg.H = 0x00
-	gb.Reg.L = 0x7C
+	gb.Reg.E = 0xd8
+	gb.Reg.H = 0x01
+	gb.Reg.L = 0x4d
 }
 
 func (gb *GbCpu) Execute(opcode uint8) uint8 {

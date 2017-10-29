@@ -8,15 +8,17 @@ import (
 const (
 	FirstScanLine        = 0
 	FirstVisibleScanline = 8
-	LastScanLine         = 153
+	LastScanLine         = CyclesFullRefresh / CyclesPerScanline
 	LastVisibleScanline  = 144
 )
 
+// Drawing a full line takes about 456 cycles
 const (
-	CyclesPerScanline = CyclesHblank + CyclesSrchSprites + CyclesTransToLCD
-	CyclesHblank      = 204 * 2 // Mode0
-	CyclesSrchSprites = 80 * 2  // Mode2
-	CyclesTransToLCD  = 172 * 2 // Mode3
+	CyclesFullRefresh = 70224 // How many cycles a full screen refresh takes (aka LCDC_PERIOD)
+	CyclesPerScanline = CyclesHblank + CyclesOamTransfer + CyclesRendering
+	CyclesHblank      = 204 // Mode0
+	CyclesOamTransfer = 80  // Mode2
+	CyclesRendering   = 172 // Mode3
 )
 
 // LCDC FF40 flags
@@ -51,7 +53,7 @@ const (
 
 type Lcd struct {
 	m             *memory.Memory
-	cyclesCounter int16
+	cyclesCounter uint32
 }
 
 func New(m *memory.Memory) (l *Lcd, err error) {
@@ -65,73 +67,88 @@ func (l *Lcd) PowerOn() {
 	fmt.Printf("# turning LCD on via %08X -> 0x%02X \n", memory.RegLcdControl, l.m.GetByte(memory.RegLcdControl))
 
 	//l.cyclesCounter = CyclesSrchSprites
-	l.m.WriteRaw(memory.RegCurrentScanline, 0x00)
+	l.cyclesCounter = 66084
+	l.m.WriteRaw(memory.RegCurrentScanline, LastVisibleScanline)
 
 }
 
-func (l *Lcd) Update(cycles uint8) {
+// Updates the LCD status, that is:
+// Zero bit 0 and 1 and set a new mask
+func (l *Lcd) updateLcdState(set uint8) {
+	state := l.m.GetByte(memory.RegLcdState)
+	state &^= BitmaskLcdsGpuMode
+	state |= set
+	l.m.WriteRaw(memory.RegLcdState, state)
+}
+
+func (l *Lcd) Update(cycles uint8, vblankCb func()) {
+
 	if (l.m.GetByte(memory.RegLcdControl) & FlagLcdcEnable) == 0 {
-		l.cyclesCounter = 0
-		l.m.WriteRaw(memory.RegCurrentScanline, 0)
-		l.m.WriteRaw(memory.RegLcdState, 0x80)
-		fmt.Printf("Screen off! reset lcd state?")
+		// LCD is disabled, values are reset
+		l.m.WriteRaw(memory.RegCurrentScanline, 0x00)
+
+		l.updateLcdState(FlagLcdsCoincidenceSignal)
+
+		// Keep counting cycles and fire vblanks
+		l.cyclesCounter += uint32(cycles)
+
+		if l.cyclesCounter >= CyclesFullRefresh {
+			l.cyclesCounter -= CyclesFullRefresh
+			vblankCb()
+		}
+		fmt.Printf("LCD IS STILL OFF...\n")
 		return
 	}
 
-	l.setStatus()
+	// 4 CpuCycles = 1 MachineCycle, so make sure to update the LCD
+	// on every machine cycle
+	cycleStep := uint8(4)
+	statDelay := uint32(4) // ?!
+	scxDelay := uint32(4)  // ?!
 
-	l.cyclesCounter += int16(cycles)
-	if l.cyclesCounter > CyclesPerScanline {
-		currentScanline := l.m.GetByte(memory.RegCurrentScanline) + 1
-		l.cyclesCounter = 0
+	for ; cycles != 0; cycles -= cycleStep {
+		l.cyclesCounter += uint32(cycleStep)
+		l.m.WriteRaw(memory.RegCurrentScanline, uint8(l.cyclesCounter/CyclesPerScanline))
 
-		if currentScanline == LastVisibleScanline {
-			// FIXME: RequestInterrupt
+		if l.cyclesCounter == CyclesFullRefresh {
+			// Full refresh cycle completed, reset display to initial values.
+			l.m.WriteRaw(memory.RegCurrentScanline, 0)
+			l.updateLcdState(GpuModeHblank)
+			l.cyclesCounter = 0
+		} else if l.cyclesCounter == LastVisibleScanline*CyclesPerScanline+statDelay {
+			// -> VBLANK state entered
+			l.updateLcdState(GpuModeVblank)
+			l.m.WriteRawAnd(memory.RegInterruptFlag, 1<<0)
+			vblankCb()
+		} else if l.cyclesCounter < LastVisibleScanline*CyclesPerScanline {
+			posInScanline := l.cyclesCounter % CyclesPerScanline
+
+			if posInScanline == statDelay {
+				l.updateLcdState(GpuModeReadOAM)
+			} else if posInScanline == CyclesOamTransfer+statDelay {
+				l.updateLcdState(GpuModeTransToLCD)
+			} else if posInScanline == CyclesOamTransfer+CyclesRendering+statDelay+scxDelay {
+				l.updateLcdState(GpuModeHblank)
+			}
+		} else if l.cyclesCounter >= ((LastScanLine - 1) * CyclesPerScanline) {
+			// >= Line 153 is a special snowflake..
+			// This is mostly stolen from SameBoy.
+			pp := l.cyclesCounter - (LastScanLine-1)*CyclesPerScanline
+			switch pp {
+			case 0:
+			// should_compare_ly = false
+			case 4:
+				l.m.WriteRaw(memory.RegCurrentScanline, 0)
+			case 8:
+				l.m.WriteRaw(memory.RegCurrentScanline, 0)
+			default:
+				l.m.WriteRaw(memory.RegCurrentScanline, 0)
+			}
+		} else {
+			// 144 - 152
+			// if statDelay && l.cyclesCount % CyclesPerScanline == 0
+			// ly_for_comparsion--;
 		}
-		if currentScanline > LastScanLine {
-			currentScanline = 0
-		} else if currentScanline < LastVisibleScanline {
-			// draw
-		}
 
-		l.m.WriteRaw(memory.RegCurrentScanline, currentScanline)
 	}
-}
-
-func (l *Lcd) setStatus() {
-
-	status := l.m.GetByte(memory.RegLcdState)
-
-	currentScanline := l.m.GetByte(memory.RegCurrentScanline)
-	//	currentMode := status & BitmaskLcdsGpuMode
-	newMode := byte(0)
-
-	if currentScanline > LastVisibleScanline {
-		newMode = GpuModeVblank
-		// FIXME: Test reqInt 4
-	} else {
-		if l.cyclesCounter < CyclesSrchSprites { // X->2
-			newMode = GpuModeReadOAM
-			// FIXME: Test reqInt 5
-		} else if l.cyclesCounter < CyclesTransToLCD { // 2->3
-			newMode = GpuModeTransToLCD
-		} else { // 3->0
-			newMode = GpuModeHblank
-			// FIXME: Test reqInt 3
-		}
-	}
-
-	// Update status with what we want it to be
-	// by setting bit 0 and 1
-	status &= 0xFC
-	status |= newMode
-
-	//if (reqInt && (newMode != currentMode)) {
-	// RequestInterrupt
-	//}
-
-	// FIXME: Check coincidence:
-	// http://www.codeslinger.co.uk/pages/projects/gameboy/lcd.html
-	l.m.WriteRaw(memory.RegLcdState, status)
-
 }
