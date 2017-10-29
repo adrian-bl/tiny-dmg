@@ -9,12 +9,15 @@ import (
 	"runtime"
 	"time"
 	"tiny-dmg/joypad"
+	"tiny-dmg/lcd"
 	"tiny-dmg/memory"
 )
 
 const (
-	width  = 160
-	height = 144
+	visibleWidth  = 160
+	visibleHeight = 144
+	width         = 256
+	height        = 256
 )
 
 func Run(m *memory.Memory, j *joypad.Joypad) {
@@ -44,12 +47,32 @@ func mapView(m *memory.Memory, memoff int, j *joypad.Joypad) {
 	for {
 		yoff := int(m.GetByte(memory.RegScrollY))
 		xoff := int(m.GetByte(memory.RegScrollX))
+		lcdc := m.GetByte(memory.RegLcdControl)
+
+		basePointer := uint16(0x9000)
+
+		tileDataOne := lcdc&(lcd.FlagLcdcBgWindowTileSelect) != 0
+		if tileDataOne {
+			basePointer = 0x8000
+		}
+
 		for i := 0; i < 1024; i++ {
-			taddr := 0x8000 + uint16(m.GetByte(uint16(i+memoff)))*16
 			x := i % 32
 			y := i / 32
+
+			taddr := basePointer
+			baddr := uint8(m.GetByte(uint16(i + memoff)))
+			if tileDataOne {
+				taddr += uint16(baddr) * 16
+			} else {
+				taddr += uint16(int8(baddr)) * 16
+			}
+
 			drawTile(s, m, taddr, x*8-xoff, y*8-yoff)
 		}
+
+		markPosition(s, xoff, yoff)
+		markPosition(s, xoff+visibleWidth, yoff+visibleHeight)
 		dw.FlushImage()
 		time.Sleep(10 * time.Millisecond)
 	}
@@ -166,15 +189,42 @@ func drawTile(s wde.Image, m *memory.Memory, taddr uint16, x, y int) {
 		taddr++
 		db := m.GetByte(uint16(r) + taddr)
 
-		s.Set(x+0, y+r, colorize(da>>7&0x01+(db>>7&0x01)<<1))
-		s.Set(x+1, y+r, colorize(da>>6&0x01+(db>>6&0x01)<<1))
-		s.Set(x+2, y+r, colorize(da>>5&0x01+(db>>5&0x01)<<1))
-		s.Set(x+3, y+r, colorize(da>>4&0x01+(db>>4&0x01)<<1))
-		s.Set(x+4, y+r, colorize(da>>3&0x01+(db>>3&0x01)<<1))
-		s.Set(x+5, y+r, colorize(da>>2&0x01+(db>>2&0x01)<<1))
-		s.Set(x+6, y+r, colorize(da>>1&0x01+(db>>1&0x01)<<1))
-		s.Set(x+7, y+r, colorize(da>>0&0x01+(db>>0&0x01)<<1))
+		set(s, x+0, y+r, colorize(da>>7&0x01+(db>>7&0x01)<<1))
+		set(s, x+1, y+r, colorize(da>>6&0x01+(db>>6&0x01)<<1))
+		set(s, x+2, y+r, colorize(da>>5&0x01+(db>>5&0x01)<<1))
+		set(s, x+3, y+r, colorize(da>>4&0x01+(db>>4&0x01)<<1))
+		set(s, x+4, y+r, colorize(da>>3&0x01+(db>>3&0x01)<<1))
+		set(s, x+5, y+r, colorize(da>>2&0x01+(db>>2&0x01)<<1))
+		set(s, x+6, y+r, colorize(da>>1&0x01+(db>>1&0x01)<<1))
+		set(s, x+7, y+r, colorize(da>>0&0x01+(db>>0&0x01)<<1))
 	}
+}
+
+func set(s wde.Image, x, y int, color *color.RGBA) {
+	if x > width {
+		x -= width
+	} else if x < 0 {
+		x += width
+	}
+
+	if y > height {
+		y -= height
+	} else if y < 0 {
+		y += height
+	}
+
+	s.Set(x, y, color)
+}
+
+func markPosition(s wde.Image, x, y int) {
+
+	for i := -55; i < 55; i++ {
+		set(s, x, y+i, &color.RGBA{0x00, 0xFF, 0x80, 0xFF})
+	}
+	for i := -55; i < 55; i++ {
+		set(s, x+i, y, &color.RGBA{0x00, 0xFF, 0x00, 0xFF})
+	}
+
 }
 
 func colorize(n byte) *color.RGBA {
