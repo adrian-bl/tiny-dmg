@@ -69,7 +69,7 @@ func (m *Memory) GetByte(addr uint16) byte {
 		panic(nil)
 	}
 
-	if addr == 0xFF85 {
+	if addr == 0xFF85 || addr == 0xFFA0 {
 		return 1
 	}
 	return m.memory[addr]
@@ -93,17 +93,9 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 	}
 
 	if RegJoypadInput == addr {
-		switch val {
-		case 0x10:
-			val = 0xDF
-		case 0x20:
-			val = 0xEF
-		case 0x30:
-			val = 0xFF
-		default:
-			fmt.Printf("Unexpected joypad write: %X\n", val)
-		}
-		fmt.Printf("Write to joypad reg, faking write to be: %X -- fixme: just set bits!\n", val)
+		fmt.Printf("YY Joypad input set to: %X\n", val)
+		m.memory[addr] &^= 0x30      // clear both bits
+		m.memory[addr] |= val & 0x30 // ..and set the new value
 	}
 
 	if RegDivider == addr {
