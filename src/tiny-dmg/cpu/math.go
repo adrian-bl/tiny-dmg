@@ -147,21 +147,24 @@ func Do_Sub_88(gb *GbCpu, target *uint8, value uint8) {
 	gb.Reg.PC++
 }
 
+// "The sum of the two operands plus the carry flag (0 or 1) is calculated, and the result is written back into the first operand."
 func Do_Adc_88(gb *GbCpu, target *uint8, value uint8) {
+	carry := uint16(0)
 	if gb.Reg.F&FlagC != 0 {
-		value++
+		carry = 1
 	}
 
-	result := uint16(*target) + uint16(value)
-
 	gb.Reg.F &= ^FlagMask
-	if result&0xFF00 != 0 {
+
+	result := uint16(*target) + uint16(value) + carry
+
+	if (result & 0xFF00) != 0 {
 		gb.Reg.F |= FlagC
 	}
 	if result&0x00FF == 0 {
 		gb.Reg.F |= FlagZ
 	}
-	if uint16(*target)&0xF+uint16(value)&0xF > 0xF {
+	if uint16(*target)&0xF+uint16(value)&0xF+carry > 0xF {
 		gb.Reg.F |= FlagH
 	}
 
