@@ -525,19 +525,16 @@ func Op_LD_HL_d8(gb *GbCpu) {
 
 func Op_LD_HL_SP_r8(gb *GbCpu) {
 	gb.Reg.F &= ^FlagMask
-	operand := gb.mem.GetByte(gb.Reg.PC + 1)
-	val := uint32(gb.Reg.SP) + uint32(operand)
 
-	if val&0xFFFF0000 != 0 {
-		gb.Reg.F |= FlagC
-		fmt.Printf("Set C?\n")
-	}
+	val := int8(gb.mem.GetByte(gb.Reg.PC + 1))
+	hl := gb.Reg.SP + uint16(val)
 
-	if (gb.Reg.SP&0x0F)+uint16(operand&0x0F) > 0x0F {
+	if ((gb.Reg.SP & 0xF) + (uint16(val) & 0xF)) > 0xF {
 		gb.Reg.F |= FlagH
 	}
-
-	hl := val & 0xFFFF
+	if ((gb.Reg.SP & 0xFF) + (uint16(val) & 0xFF)) > 0xFF {
+		gb.Reg.F |= FlagC
+	}
 
 	gb.Reg.L = uint8(hl & 0xFF)
 	gb.Reg.H = uint8((hl >> 8 & 0xFF))
@@ -754,22 +751,24 @@ func Op_ADD_HL_HL(gb *GbCpu) {
 	gb.Reg.H = uint8((hl >> 8 & 0xFF))
 }
 
+// Add next byte to SP, note that this
+// is not the same as Add_1616 - because.. z80 reasons.
 func Op_ADD_SP_n(gb *GbCpu) {
 	gb.Reg.PC++
 	val := uint16(int8(gb.mem.GetByte(gb.Reg.PC)))
+	sp := gb.Reg.SP
 
-	half := uint8(0)
-	if (gb.Reg.SP&0xF + val&0xF) > 0xF {
-		half = FlagH
+	gb.Reg.SP += val
+	gb.Reg.F &= ^FlagMask
+
+	if ((sp & 0xF) + (val & 0xF)) > 0xF {
+		gb.Reg.F |= FlagH
+	}
+	if ((sp & 0xFF) + (val & 0xFF)) > 0xFF {
+		gb.Reg.F |= FlagC
 	}
 
-	Do_Add_1616(gb, &gb.Reg.SP, val)
-
-	// unlike raw add_1616, this does always clear
-	// the zero flag and has a different understanding of
-	// halfcarry :-/
-	gb.Reg.F &= ^(FlagZ | FlagH)
-	gb.Reg.F |= half
+	gb.Reg.PC++
 }
 
 func Op_ADD_A_n(gb *GbCpu) {
