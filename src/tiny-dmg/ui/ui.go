@@ -18,6 +18,8 @@ const (
 	visibleHeight = 144
 	width         = 256
 	height        = 256
+	shiftWidth    = (width - visibleWidth) / 2
+	shiftHeight   = (height - visibleHeight) / 2
 )
 
 func Run(m *memory.Memory, j *joypad.Joypad) {
@@ -68,13 +70,27 @@ func mapView(m *memory.Memory, memoff int, j *joypad.Joypad) {
 				taddr += uint16(int8(baddr)) * 16
 			}
 
-			drawTile(s, m, taddr, x*8-xoff, y*8-yoff)
+			drawTile(s, m, taddr, shiftWidth+x*8-xoff, shiftHeight+y*8-yoff)
 		}
 
-		markPosition(s, xoff, yoff)
-		markPosition(s, xoff+visibleWidth, yoff+visibleHeight)
+		doSprites(s, m, shiftWidth, shiftHeight)
+
+		markPosition(s, shiftWidth, shiftHeight)
+		markPosition(s, shiftWidth+visibleWidth, shiftHeight+visibleHeight)
 		dw.FlushImage()
 		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func doSprites(s wde.Image, m *memory.Memory, xoff, yoff int) {
+	base := uint16(0xFE00)
+	for i := uint16(0); i < 40; i++ {
+		py := int(m.GetByte(base+i*4+0)) - 16
+		px := int(m.GetByte(base+i*4+1)) - 8
+		tn := int(m.GetByte(base + i*4 + 2))
+		// at := m.GetByte(base + i*4 + 3)
+		p := uint16(tn*0x10 + 0x8000)
+		drawTile(s, m, p, xoff+px, yoff+py)
 	}
 }
 
@@ -89,16 +105,8 @@ func sprites(m *memory.Memory) {
 	dw.Show()
 
 	s := dw.Screen()
-	base := uint16(0xFE00)
 	for {
-		for i := uint16(0); i < 40; i++ {
-			py := int(m.GetByte(base+i*4+0)) - 16
-			px := int(m.GetByte(base+i*4+1)) - 8
-			tn := int(m.GetByte(base + i*4 + 2))
-			// at := m.GetByte(base + i*4 + 3)
-			p := uint16(tn*0x10 + 0x8000)
-			drawTile(s, m, p, px, py)
-		}
+		doSprites(s, m, 0, 0)
 		dw.FlushImage()
 		time.Sleep(10 * time.Millisecond)
 	}
@@ -217,11 +225,11 @@ func set(s wde.Image, x, y int, color *color.RGBA) {
 }
 
 func markPosition(s wde.Image, x, y int) {
-
-	for i := -55; i < 55; i++ {
+	len := 200
+	for i := -1 * len; i < len; i++ {
 		set(s, x, y+i, &color.RGBA{0x00, 0xFF, 0x80, 0xFF})
 	}
-	for i := -55; i < 55; i++ {
+	for i := -1 * len; i < len; i++ {
 		set(s, x+i, y, &color.RGBA{0x00, 0xFF, 0x00, 0xFF})
 	}
 
