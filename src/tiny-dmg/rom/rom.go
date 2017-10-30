@@ -5,7 +5,7 @@ import (
 )
 
 type RomImage struct {
-	Blob             []byte // whole file
+	blob             []byte // whole file
 	LogoValid        bool   // 0x104-0x133
 	Title            string // 0x134-0x143
 	ManufacturerCode string // 0x013f-0x0142
@@ -20,12 +20,18 @@ type RomImage struct {
 func NewFromDisk(path string) (r RomImage, err error) {
 	r = RomImage{}
 
-	r.Blob, err = ioutil.ReadFile(path)
+	r.blob, err = ioutil.ReadFile(path)
 	if err == nil {
-		r.CGB = (r.Blob[0x143] == 1)
-		r.SGB = (r.Blob[0x146] == 1)
-		r.Title = string(r.Blob[0x134:0x143]) // fixme: trim junk?
-		r.ManufacturerCode = string(r.Blob[0x13f:0x142])
+		r.CGB = (r.blob[0x143] == 1)
+		r.SGB = (r.blob[0x146] == 1)
+		r.RomType = r.blob[0x147]
+		r.Title = string(r.blob[0x134:0x143]) // fixme: trim junk?
+		r.ManufacturerCode = string(r.blob[0x13f:0x142])
 	}
 	return
+}
+
+// GetBytes returns the full ROM as it was read from disk.
+func (r *RomImage) GetBytes() []byte {
+	return r.blob[0:]
 }
