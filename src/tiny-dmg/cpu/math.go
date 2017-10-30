@@ -14,7 +14,7 @@ func Do_Inc_Uint8(gb *GbCpu, target *uint8) {
 
 	if (result & 0x0F) == 0x00 {
 		gb.Reg.F |= FlagH
-		fmt.Printf("-> HALF CARRY SET.")
+		fmt.Printf("-> HALF CARRY SET\n")
 	}
 
 	*target = result
@@ -84,16 +84,16 @@ func Do_Add_1616(gb *GbCpu, target *uint16, value uint16) {
 	gb.Reg.F &= ^(FlagC | FlagH | FlagN) // Zero flag is not touched
 
 	result := uint32(*target) + uint32(value)
-	*target = uint16(result & 0xFFFF)
 
-	if (result & 0xFFFF0000) != 0 {
+	if (uint32(*target)&0xFFF+uint32(value)&0xFFF)&0x1000 != 0 {
+		gb.Reg.F |= FlagH
+	}
+	if result > 0xFFFF {
 		gb.Reg.F |= FlagC
 	}
 	// No Z flag
-	if ((*target & 0x0F) + (value & 0x0f)) > 0x0F {
-		gb.Reg.F |= FlagH
-	}
 
+	*target = uint16(result)
 	gb.Reg.PC++
 }
 
@@ -101,19 +101,17 @@ func Do_Add_88(gb *GbCpu, target *uint8, value uint8) {
 	gb.Reg.F &= ^FlagMask
 
 	result := uint16(*target) + uint16(value)
-	*target = uint8(result & 0xFF)
 
 	if (result & 0xFF00) != 0 {
 		gb.Reg.F |= FlagC
 	}
-	if *target == 0 {
+	if result&0x00FF == 0 {
 		gb.Reg.F |= FlagZ
 	}
-	if ((*target & 0x0F) + (value & 0x0F)) > 0x0F {
+	if uint16(*target)&0xF+uint16(value)&0xF > 0xF {
 		gb.Reg.F |= FlagH
-		fmt.Printf("Fixme? halfcarry?")
 	}
-
+	*target = uint8(result)
 	gb.Reg.PC++
 }
 
@@ -158,16 +156,16 @@ func Do_Adc_88(gb *GbCpu, target *uint8, value uint8) {
 
 	gb.Reg.F &= ^FlagMask
 	if result&0xFF00 != 0 {
-		gb.Reg.F |= FlagH
+		gb.Reg.F |= FlagC
 	}
-	if value == *target {
+	if result&0x00FF == 0 {
 		gb.Reg.F |= FlagZ
 	}
-	if ((*target & 0x0F) + (value & 0x0F)) > 0x0F {
+	if uint16(*target)&0xF+uint16(value)&0xF > 0xF {
 		gb.Reg.F |= FlagH
 	}
 
-	*target = uint8(result & 0xFF)
+	*target = uint8(result)
 	gb.Reg.PC++
 }
 

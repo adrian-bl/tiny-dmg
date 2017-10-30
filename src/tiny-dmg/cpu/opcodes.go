@@ -19,7 +19,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x05: {"DEC B			", 4, func(gb *GbCpu) { Do_Dec_Uint8(gb, &gb.Reg.B) }},
 	0x06: {"LD B, d8		", 8, Op_LDBn},
 	0x07: {"RLCA			", 4, Op_RLCA},
-	// 0x08 LD(a16),SP , 20
+	0x08: {"LD (a16), SP	", 20, Op_LD_a16_SP},
 	0x09: {"ADD HL, BC		", 8, Op_ADD_HL_BC},
 	0x10: {"STOP 0			", 4, func(gb *GbCpu) { fmt.Printf("!! stop ignored\n"); gb.Reg.PC++ }},
 	0x0A: {"LD A, (BC)		", 8, Op_LD_A_BC},
@@ -71,7 +71,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x38: {"JR C, r8		", 8, Op_JR_C_n}, // Fixme: this can be 12 or 8
 	0x39: {"ADD HL, SP		", 8, Op_ADD_HL_SP},
 	0x3A: {"LD A, (HL-)		", 8, Op_LD_A_HLdec},
-	// 0x3B DEC SP, 8
+	0x3B: {"DEC SP			", 8, func(gb *GbCpu) { gb.Reg.SP--; gb.Reg.PC++ }},
 	0x3C: {"INC A			", 4, func(gb *GbCpu) { Do_Inc_Uint8(gb, &gb.Reg.A) }},
 	0x3D: {"DEC A			", 4, func(gb *GbCpu) { Do_Dec_Uint8(gb, &gb.Reg.A) }},
 	0x3E: {"LD A, d8		", 8, Op_LDAn},
@@ -194,8 +194,8 @@ var OpCodes = map[uint8]OpEntry{
 	0xC1: {"POP BC			", 12, Op_POP_BC},
 	0xC2: {"JP NZ, a16		", 12, Op_JP_NZ}, // Fixme: can be 12 or 16
 	0xC3: {"JP a16			", 16, Op_JP},
-	0xC5: {"PUSH BC			", 16, Op_PUSH_BC},
 	0xC4: {"CALL NZ, a16	", 12, Op_CALL_NZ_a16}, // fixme: 12 or 24
+	0xC5: {"PUSH BC			", 16, Op_PUSH_BC},
 	0xC6: {"ADD A, d8		", 8, Op_ADD_A_n},
 	0xC8: {"RET Z			", 8, Op_RET_Z}, // Fixme: can be 8 or 20
 	0xC9: {"RET				", 16, Op_RET},
@@ -531,7 +531,6 @@ func Op_LD_HL_SP_r8(gb *GbCpu) {
 	if val&0xFFFF0000 != 0 {
 		gb.Reg.F |= FlagC
 		fmt.Printf("Set C?\n")
-		gb.crash()
 	}
 
 	if (gb.Reg.SP&0x0F)+uint16(operand&0x0F) > 0x0F {
@@ -567,6 +566,14 @@ func Op_LD_a16_A(gb *GbCpu) {
 	gb.mem.WriteByte(addr, gb.Reg.A)
 	gb.Reg.PC += 3
 	fmt.Printf("LD %X -> %X\n", addr, gb.Reg.A)
+}
+
+func Op_LD_a16_SP(gb *GbCpu) {
+	addr := uint16(gb.mem.GetByte(gb.Reg.PC+1)) + uint16(gb.mem.GetByte(gb.Reg.PC+2))<<8
+	gb.mem.WriteByte(addr, uint8(gb.Reg.SP&0xFF))
+	gb.mem.WriteByte(addr+1, uint8(gb.Reg.SP>>8)&0xFF)
+	fmt.Printf("%X = %X, %X = %X\n", addr, gb.mem.GetByte(addr), addr+1, gb.mem.GetByte(addr+1))
+	gb.Reg.PC += 3
 }
 
 func Op_LD_H_n(gb *GbCpu) {
@@ -750,11 +757,19 @@ func Op_ADD_HL_HL(gb *GbCpu) {
 func Op_ADD_SP_n(gb *GbCpu) {
 	gb.Reg.PC++
 	val := uint16(int8(gb.mem.GetByte(gb.Reg.PC)))
+
+	half := uint8(0)
+	if (gb.Reg.SP&0xF + val&0xF) > 0xF {
+		half = FlagH
+	}
+
 	Do_Add_1616(gb, &gb.Reg.SP, val)
 
 	// unlike raw add_1616, this does always clear
-	// the zero flag
-	gb.Reg.F &= ^FlagZ
+	// the zero flag and has a different understanding of
+	// halfcarry :-/
+	gb.Reg.F &= ^(FlagZ | FlagH)
+	gb.Reg.F |= half
 }
 
 func Op_ADD_A_n(gb *GbCpu) {
@@ -861,10 +876,9 @@ func Op_Rst(gb *GbCpu, pc uint16) {
 // Would https://forums.nesdev.com/viewtopic.php?f=20&t=15944 also work?
 func Op_DAA(gb *GbCpu) {
 	a := gb.Reg.A
-	f := gb.Reg.F & (FlagN | FlagC) // FlagN is not touched
+	f := gb.Reg.F & (FlagN | FlagC) // FlagN and FlagC are not touched
 
 	if gb.Reg.F&FlagN != 0 {
-		fmt.Printf("HERE\n")
 		if gb.Reg.F&FlagH != 0 {
 			gb.Reg.F &^= FlagH
 			if gb.Reg.F&FlagC != 0 {
