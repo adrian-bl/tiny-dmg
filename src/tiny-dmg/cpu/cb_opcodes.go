@@ -9,6 +9,18 @@ func Cb_Disp(gb *GbCpu) {
 	fmt.Printf("-> CB %02X\n", op)
 
 	switch op {
+	case 0x00:
+		Cb_rlc(gb, &gb.Reg.B, gb.Reg.B)
+	case 0x01:
+		Cb_rlc(gb, &gb.Reg.C, gb.Reg.C)
+	case 0x02:
+		Cb_rlc(gb, &gb.Reg.D, gb.Reg.D)
+	case 0x03:
+		Cb_rlc(gb, &gb.Reg.E, gb.Reg.E)
+	case 0x04:
+		Cb_rlc(gb, &gb.Reg.H, gb.Reg.H)
+	case 0x05:
+		Cb_rlc(gb, &gb.Reg.L, gb.Reg.L)
 	case 0x09:
 		Do_Rrc(gb, &gb.Reg.C)
 		gb.Reg.PC-- // undo
@@ -408,12 +420,31 @@ func Cb_rl(gb *GbCpu, target *uint8, value uint8) {
 	}
 
 	value <<= 1
-	value += carry
+	value |= carry
 
 	if value == 0 {
 		gb.Reg.F |= FlagZ
 	}
 
+	*target = value
+}
+
+func Cb_rlc(gb *GbCpu, target *uint8, value uint8) {
+	gb.Reg.F &= ^FlagMask
+
+	carry := uint8(0)
+	if value&0x80 != 0 {
+		carry = 1
+		gb.Reg.F |= FlagC
+	}
+
+	value <<= 1
+
+	if value == 0 {
+		gb.Reg.F |= FlagZ
+	}
+
+	value |= carry
 	*target = value
 }
 
