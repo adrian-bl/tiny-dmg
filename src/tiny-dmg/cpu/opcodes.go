@@ -162,6 +162,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x9C: {"SBC A, H		", 4, func(gb *GbCpu) { Do_Sbc_88(gb, &gb.Reg.A, gb.Reg.H) }},
 	0x9D: {"SBC A, L		", 4, func(gb *GbCpu) { Do_Sbc_88(gb, &gb.Reg.A, gb.Reg.L) }},
 	0x9E: {"SBC A,(HL)		", 8, Op_SBC_A_HL},
+	0x9F: {"SBC A, A		", 4, func(gb *GbCpu) { Do_Sbc_88(gb, &gb.Reg.A, gb.Reg.A) }},
 	0xA0: {"AND B			", 4, func(gb *GbCpu) { Do_And_88(gb, &gb.Reg.A, gb.Reg.B) }},
 	0xA1: {"AND C			", 4, func(gb *GbCpu) { Do_And_88(gb, &gb.Reg.A, gb.Reg.C) }},
 	0xA2: {"AND D			", 4, func(gb *GbCpu) { Do_And_88(gb, &gb.Reg.A, gb.Reg.D) }},
@@ -189,6 +190,8 @@ var OpCodes = map[uint8]OpEntry{
 	0xB9: {"CP C			", 4, func(gb *GbCpu) { Do_Cp(gb, gb.Reg.A, gb.Reg.C) }},
 	0xBA: {"CP D			", 4, func(gb *GbCpu) { Do_Cp(gb, gb.Reg.A, gb.Reg.D) }},
 	0xBB: {"CP E			", 4, func(gb *GbCpu) { Do_Cp(gb, gb.Reg.A, gb.Reg.E) }},
+	0xBC: {"CP H			", 4, func(gb *GbCpu) { Do_Cp(gb, gb.Reg.A, gb.Reg.H) }},
+	0xBD: {"CP L			", 4, func(gb *GbCpu) { Do_Cp(gb, gb.Reg.A, gb.Reg.L) }},
 	0xBE: {"CP (HL)			", 8, Op_CP_HL},
 	0xC0: {"RET NZ			", 8, Op_RET_NZ}, // Fixme: can be 8 or 20
 	0xC1: {"POP BC			", 12, Op_POP_BC},
