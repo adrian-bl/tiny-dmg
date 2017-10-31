@@ -21,8 +21,32 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_rlc(gb, &gb.Reg.H, gb.Reg.H)
 	case 0x05:
 		Cb_rlc(gb, &gb.Reg.L, gb.Reg.L)
+	case 0x06:
+		Cb_rlc_hlp(gb)
+	case 0x07:
+		Cb_rlc(gb, &gb.Reg.A, gb.Reg.A)
+	case 0x08:
+		Do_Rrc(gb, &gb.Reg.B)
+		gb.Reg.PC-- // undo
 	case 0x09:
 		Do_Rrc(gb, &gb.Reg.C)
+		gb.Reg.PC-- // undo
+	case 0x0A:
+		Do_Rrc(gb, &gb.Reg.D)
+		gb.Reg.PC-- // undo
+	case 0x0B:
+		Do_Rrc(gb, &gb.Reg.E)
+		gb.Reg.PC-- // undo
+	case 0x0C:
+		Do_Rrc(gb, &gb.Reg.H)
+		gb.Reg.PC-- // undo
+	case 0x0D:
+		Do_Rrc(gb, &gb.Reg.L)
+		gb.Reg.PC-- // undo
+	case 0x0E:
+		Cb_rrc_hlp(gb)
+	case 0x0F:
+		Do_Rrc(gb, &gb.Reg.A)
 		gb.Reg.PC-- // undo
 	case 0x10:
 		Cb_rl(gb, &gb.Reg.B, gb.Reg.B)
@@ -36,6 +60,8 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_rl(gb, &gb.Reg.H, gb.Reg.H)
 	case 0x15:
 		Cb_rl(gb, &gb.Reg.L, gb.Reg.L)
+	case 0x16:
+		Cb_rl_hlp(gb)
 	case 0x17:
 		Cb_rl(gb, &gb.Reg.A, gb.Reg.A)
 	case 0x18:
@@ -50,6 +76,10 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_rr(gb, &gb.Reg.H, gb.Reg.H)
 	case 0x1D:
 		Cb_rr(gb, &gb.Reg.L, gb.Reg.L)
+	case 0x1E:
+		Cb_rr_hlp(gb)
+	case 0x1F:
+		Cb_rr(gb, &gb.Reg.A, gb.Reg.A)
 	case 0x20:
 		Cb_sla(gb, &gb.Reg.B)
 	case 0x21:
@@ -62,6 +92,8 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_sla(gb, &gb.Reg.H)
 	case 0x25:
 		Cb_sla(gb, &gb.Reg.L)
+	case 0x26:
+		Cb_sla_hlp(gb)
 	case 0x27:
 		Cb_sla(gb, &gb.Reg.A)
 	case 0x28:
@@ -78,20 +110,24 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_sra(gb, &gb.Reg.L)
 	case 0x2F:
 		Cb_sra(gb, &gb.Reg.A)
+	case 0x2E:
+		Cb_sra_hlp(gb)
 	case 0x30:
-		Cb_SwapReg(&gb.Reg.F, &gb.Reg.B)
+		Cb_SwapReg(gb, &gb.Reg.B)
 	case 0x31:
-		Cb_SwapReg(&gb.Reg.F, &gb.Reg.C)
+		Cb_SwapReg(gb, &gb.Reg.C)
 	case 0x32:
-		Cb_SwapReg(&gb.Reg.F, &gb.Reg.D)
+		Cb_SwapReg(gb, &gb.Reg.D)
 	case 0x33:
-		Cb_SwapReg(&gb.Reg.F, &gb.Reg.E)
+		Cb_SwapReg(gb, &gb.Reg.E)
 	case 0x34:
-		Cb_SwapReg(&gb.Reg.F, &gb.Reg.H)
+		Cb_SwapReg(gb, &gb.Reg.H)
 	case 0x35:
-		Cb_SwapReg(&gb.Reg.F, &gb.Reg.L)
+		Cb_SwapReg(gb, &gb.Reg.L)
+	case 0x36:
+		Cb_SwapReg_hlp(gb)
 	case 0x37:
-		Cb_SwapReg(&gb.Reg.F, &gb.Reg.A)
+		Cb_SwapReg(gb, &gb.Reg.A)
 	case 0x38:
 		Cb_srl(gb, &gb.Reg.B, gb.Reg.B)
 	case 0x39:
@@ -104,6 +140,8 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_srl(gb, &gb.Reg.H, gb.Reg.H)
 	case 0x3D:
 		Cb_srl(gb, &gb.Reg.L, gb.Reg.L)
+	case 0x3E:
+		Cb_srl_hlp(gb)
 	case 0x3F:
 		Cb_srl(gb, &gb.Reg.A, gb.Reg.A)
 	case 0x40:
@@ -150,6 +188,8 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_checkBit(gb, 0x02, gb.Reg.H)
 	case 0x55:
 		Cb_checkBit(gb, 0x02, gb.Reg.L)
+	case 0x56:
+		Cb_checkBitn(gb, 0x02, gb.Reg.H, gb.Reg.L)
 	case 0x57:
 		Cb_checkBit(gb, 0x02, gb.Reg.A)
 	case 0x58:
@@ -180,6 +220,8 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_checkBit(gb, 0x04, gb.Reg.H)
 	case 0x65:
 		Cb_checkBit(gb, 0x04, gb.Reg.L)
+	case 0x66:
+		Cb_checkBitn(gb, 0x04, gb.Reg.H, gb.Reg.L)
 	case 0x67:
 		Cb_checkBit(gb, 0x04, gb.Reg.A)
 	case 0x68:
@@ -466,6 +508,8 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_set(0x06, &gb.Reg.H)
 	case 0xF5:
 		Cb_set(0x06, &gb.Reg.L)
+	case 0xF6:
+		Cb_SetHlpBit(gb, 0x06)
 	case 0xF7:
 		Cb_set(0x06, &gb.Reg.A)
 	case 0xF8:
@@ -506,13 +550,13 @@ func Cb_SetHlpBit(gb *GbCpu, bit uint8) {
 	gb.mem.WriteByte(addr, val)
 }
 
-func Cb_SwapReg(flags *uint8, target *uint8) {
+func Cb_SwapReg(gb *GbCpu, target *uint8) {
 	*target = ((*target & 0xF) << 4) | ((*target & 0xF0) >> 4)
 
-	*flags &= ^FlagMask // clear all bits
+	gb.Reg.F &= ^FlagMask // clear all bits
 
 	if *target == 0 {
-		*flags |= FlagZ
+		gb.Reg.F |= FlagZ
 	}
 }
 
@@ -620,6 +664,63 @@ func Cb_rlc(gb *GbCpu, target *uint8, value uint8) {
 
 	value |= carry
 	*target = value
+}
+
+func Cb_rlc_hlp(gb *GbCpu) {
+	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	val := gb.mem.GetByte(hl)
+	Cb_rlc(gb, &val, val)
+	gb.mem.WriteByte(hl, val)
+}
+
+func Cb_rrc_hlp(gb *GbCpu) {
+	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	val := gb.mem.GetByte(hl)
+	Do_Rrc(gb, &val)
+	gb.mem.WriteByte(hl, val)
+	gb.Reg.PC-- // undo
+}
+
+func Cb_rl_hlp(gb *GbCpu) {
+	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	val := gb.mem.GetByte(hl)
+	Cb_rl(gb, &val, val)
+	gb.mem.WriteByte(hl, val)
+}
+
+func Cb_rr_hlp(gb *GbCpu) {
+	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	val := gb.mem.GetByte(hl)
+	Cb_rr(gb, &val, val)
+	gb.mem.WriteByte(hl, val)
+}
+
+func Cb_sla_hlp(gb *GbCpu) {
+	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	val := gb.mem.GetByte(hl)
+	Cb_sla(gb, &val)
+	gb.mem.WriteByte(hl, val)
+}
+
+func Cb_srl_hlp(gb *GbCpu) {
+	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	val := gb.mem.GetByte(hl)
+	Cb_srl(gb, &val, val)
+	gb.mem.WriteByte(hl, val)
+}
+
+func Cb_sra_hlp(gb *GbCpu) {
+	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	val := gb.mem.GetByte(hl)
+	Cb_sra(gb, &val)
+	gb.mem.WriteByte(hl, val)
+}
+
+func Cb_SwapReg_hlp(gb *GbCpu) {
+	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
+	val := gb.mem.GetByte(hl)
+	Cb_SwapReg(gb, &val)
+	gb.mem.WriteByte(hl, val)
 }
 
 // 9 bit rotation to right

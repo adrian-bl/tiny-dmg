@@ -203,6 +203,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xBC: {"CP H			", 4, func(gb *GbCpu) { Do_Cp(gb, gb.Reg.A, gb.Reg.H) }},
 	0xBD: {"CP L			", 4, func(gb *GbCpu) { Do_Cp(gb, gb.Reg.A, gb.Reg.L) }},
 	0xBE: {"CP (HL)			", 8, Op_CP_HL},
+	0xBF: {"CP A			", 4, func(gb *GbCpu) { Do_Cp(gb, gb.Reg.A, gb.Reg.A) }},
 	0xC0: {"RET NZ			", 8, Op_RET_NZ}, // Fixme: can be 8 or 20
 	0xC1: {"POP BC			", 12, Op_POP_BC},
 	0xC2: {"JP NZ, a16		", 12, Op_JP_NZ}, // Fixme: can be 12 or 16
