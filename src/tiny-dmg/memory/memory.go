@@ -12,6 +12,7 @@ type Memory struct {
 	memory [0x10000]byte // memory ranges from 0x0000 - 0xFFFF
 	joypad *joypad.Joypad
 	mbc    mbc.MemoryBankController
+	rom    rom.RomImage
 }
 
 func New(r rom.RomImage, j *joypad.Joypad) (m *Memory, err error) {
@@ -19,6 +20,7 @@ func New(r rom.RomImage, j *joypad.Joypad) (m *Memory, err error) {
 	copy(m.memory[0:], r.GetBytes())
 	m.mbc = mbc.GetMbc(r.RomType)
 	m.joypad = j
+	m.rom = r
 	return
 }
 
@@ -61,14 +63,12 @@ func (m *Memory) PowerOn() {
 }
 
 func (m *Memory) GetByte(addr uint16) byte {
-	if addr <= 0x3FFF {
-		// Bank 0
-	} else if addr <= 0x7FFF {
-		return m.mbc.ReadBank4000(m, addr)
+	if addr <= 0x7FFF {
+		return m.mbc.ReadFromRom(m.rom, addr)
 	} else if addr <= 0x9FFF {
 		// Vram read
 	} else if addr <= 0xBFFF {
-		panic(fmt.Errorf("External RAM read! %X\n", addr))
+		return m.mbc.ReadExternalRam(m, addr)
 	} else if addr <= 0xCFFF {
 		// Work RAM bank 0
 	} else if addr <= 0xDFFF {
@@ -94,18 +94,15 @@ func (m *Memory) GetByte(addr uint16) byte {
 }
 
 func (m *Memory) WriteByte(addr uint16, val byte) {
-	if addr <= 0x3FFF {
-		fmt.Printf("Write to ROM bank 00 at %X\n", addr)
-		m.mbc.WriteToRom(addr, val)
-		return
-	} else if addr <= 0x7FFF {
-		fmt.Printf("Write to ROM bank 01 at %X\n", addr)
+	if addr <= 0x7FFF {
+		fmt.Printf("Write to ROM bank %X\n", addr)
 		m.mbc.WriteToRom(addr, val)
 		return
 	} else if addr <= 0x9FFF {
 		fmt.Printf("VRAM write: %X = %X\n", addr, val)
 	} else if addr <= 0xBFFF {
-		panic(fmt.Errorf("External RAM write! %X = %X\n", addr, val))
+		m.mbc.WriteExternalRam(m, addr, val)
+		return
 	} else if addr <= 0xCFFF {
 		fmt.Printf("Write to Work RAM? %X = %X\n", addr, val)
 	} else if addr <= 0xDFFF {

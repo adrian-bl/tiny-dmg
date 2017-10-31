@@ -2,15 +2,19 @@ package mbc
 
 import (
 	"fmt"
+	"tiny-dmg/rom"
 )
 
 type MemoryBankController interface {
-	ReadBank4000(RawMemoryAccess, uint16) byte
+	ReadFromRom(rom.RomImage, uint16) byte
 	WriteToRom(uint16, uint8)
+	WriteExternalRam(RawMemoryAccess, uint16, uint8)
+	ReadExternalRam(RawMemoryAccess, uint16) byte
 }
 
 type RawMemoryAccess interface {
 	GetRaw(uint16) byte
+	WriteRaw(uint16, byte)
 }
 
 func GetMbc(t uint8) MemoryBankController {

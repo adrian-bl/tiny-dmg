@@ -31,7 +31,7 @@ func (mach *Machine) PowerOn() {
 	mach.cpu.PowerOn()
 }
 
-var XLOG = "mgxba"
+var XLOG = "verbose"
 
 func (mach *Machine) Run() {
 	fmt.Printf("Starting Z80 emulation, initial pc=%08X\n", mach.cpu.Reg.PC)

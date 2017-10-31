@@ -35,3 +35,8 @@ func NewFromDisk(path string) (r RomImage, err error) {
 func (r *RomImage) GetBytes() []byte {
 	return r.blob[0:]
 }
+
+// Returns a single byte from the raw rom.
+func (r *RomImage) GetByte(addr uint32) byte {
+	return r.blob[addr]
+}
