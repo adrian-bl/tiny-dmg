@@ -89,5 +89,15 @@ func (mach *Machine) Run() {
 		mach.cpu.ClockCycles += uint32(cycles)
 		mach.lcd.Update(cycles)
 		mach.itr.Update(mach.cpu, mach.mem)
+		dividerHack(mach.cpu, mach.mem)
+	}
+}
+
+// Just a quick hack to get the divider register running, FIXME: Needs proper emulation.
+func dividerHack(gb *cpu.GbCpu, m *memory.Memory) {
+	if gb.ClockCycles%256 == 0 {
+		v := m.GetByte(memory.RegDivider)
+		v++
+		m.WriteRaw(memory.RegDivider, v)
 	}
 }

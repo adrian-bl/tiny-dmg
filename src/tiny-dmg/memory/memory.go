@@ -132,6 +132,9 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 		case RegDoDMA:
 			m.regWriteDoDma(val)
 			return
+		case RegDivider:
+			val = 0
+			// does NOT return: write just resets it.
 		default:
 			fmt.Printf("IO reg %X not handled, write %X will happen...\n", addr, val)
 		}
