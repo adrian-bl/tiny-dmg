@@ -260,6 +260,22 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_ResetBit(0x01, &gb.Reg.L)
 	case 0x9E:
 		Cb_res_16(gb, 0x03, gb.Reg.H, gb.Reg.L)
+	case 0xA0:
+		Cb_ResetBit(0x04, &gb.Reg.B)
+	case 0xA1:
+		Cb_ResetBit(0x04, &gb.Reg.C)
+	case 0xA2:
+		Cb_ResetBit(0x04, &gb.Reg.D)
+	case 0xA3:
+		Cb_ResetBit(0x04, &gb.Reg.E)
+	case 0xA4:
+		Cb_ResetBit(0x04, &gb.Reg.H)
+	case 0xA5:
+		Cb_ResetBit(0x04, &gb.Reg.L)
+	case 0xA6:
+		Cb_res_16(gb, 0x04, gb.Reg.H, gb.Reg.L)
+	case 0xA7:
+		Cb_ResetBit(0x04, &gb.Reg.A)
 	case 0xA8:
 		Cb_ResetBit(0x05, &gb.Reg.B)
 	case 0xA9:
