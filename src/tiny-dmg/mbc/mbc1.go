@@ -18,8 +18,10 @@ func NewMbc1() MemoryBankController {
 }
 
 func (mbc *Mbc1) ReadFromRom(r rom.RomImage, addr uint16) uint8 {
-	real := uint32(addr) + (0x4000 * uint32(mbc.bank-1))
-	fmt.Printf("ReadFromRom: %X -> %X\n", addr, real)
+	real := uint32(addr)
+	if addr >= 0x4000 {
+		real = uint32(addr) + (0x4000 * uint32(mbc.bank-1))
+	}
 	return r.GetByte(real)
 }
 
