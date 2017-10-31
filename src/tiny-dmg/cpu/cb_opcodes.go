@@ -251,15 +251,49 @@ func Cb_Disp(gb *GbCpu) {
 	case 0x89:
 		Cb_ResetBit(0x01, &gb.Reg.C)
 	case 0x8A:
-		Cb_ResetBit(0x01, &gb.Reg.E)
+		Cb_ResetBit(0x01, &gb.Reg.D)
 	case 0x8B:
 		Cb_ResetBit(0x01, &gb.Reg.E)
 	case 0x8C:
 		Cb_ResetBit(0x01, &gb.Reg.H)
 	case 0x8D:
 		Cb_ResetBit(0x01, &gb.Reg.L)
+	case 0x8E:
+		Cb_res_16(gb, 0x01, gb.Reg.H, gb.Reg.L)
+	case 0x8F:
+		Cb_ResetBit(0x01, &gb.Reg.A)
+	case 0x90:
+		Cb_ResetBit(0x02, &gb.Reg.B)
+	case 0x91:
+		Cb_ResetBit(0x02, &gb.Reg.C)
+	case 0x92:
+		Cb_ResetBit(0x02, &gb.Reg.D)
+	case 0x93:
+		Cb_ResetBit(0x02, &gb.Reg.E)
+	case 0x94:
+		Cb_ResetBit(0x02, &gb.Reg.H)
+	case 0x95:
+		Cb_ResetBit(0x02, &gb.Reg.L)
+	case 0x96:
+		Cb_res_16(gb, 0x02, gb.Reg.H, gb.Reg.L)
+	case 0x97:
+		Cb_ResetBit(0x02, &gb.Reg.A)
+	case 0x98:
+		Cb_ResetBit(0x03, &gb.Reg.B)
+	case 0x99:
+		Cb_ResetBit(0x03, &gb.Reg.C)
+	case 0x9A:
+		Cb_ResetBit(0x03, &gb.Reg.D)
+	case 0x9B:
+		Cb_ResetBit(0x03, &gb.Reg.E)
+	case 0x9C:
+		Cb_ResetBit(0x03, &gb.Reg.H)
+	case 0x9D:
+		Cb_ResetBit(0x03, &gb.Reg.L)
 	case 0x9E:
 		Cb_res_16(gb, 0x03, gb.Reg.H, gb.Reg.L)
+	case 0x9F:
+		Cb_ResetBit(0x03, &gb.Reg.A)
 	case 0xA0:
 		Cb_ResetBit(0x04, &gb.Reg.B)
 	case 0xA1:
@@ -352,6 +386,10 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_set(0x01, &gb.Reg.H)
 	case 0xCD:
 		Cb_set(0x01, &gb.Reg.L)
+	case 0xCE:
+		Cb_SetHlpBit(gb, 0x01)
+	case 0xCF:
+		Cb_set(0x01, &gb.Reg.A)
 	case 0xD0:
 		Cb_set(0x02, &gb.Reg.B)
 	case 0xD1:
@@ -366,6 +404,8 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_set(0x02, &gb.Reg.L)
 	case 0xD6:
 		Cb_SetHlpBit(gb, 0x02)
+	case 0xD7:
+		Cb_set(0x02, &gb.Reg.A)
 	case 0xD8:
 		Cb_set(0x03, &gb.Reg.B)
 	case 0xD9:
@@ -380,6 +420,36 @@ func Cb_Disp(gb *GbCpu) {
 		Cb_set(0x03, &gb.Reg.L)
 	case 0xDE:
 		Cb_SetHlpBit(gb, 0x03)
+	case 0xDF:
+		Cb_set(0x03, &gb.Reg.A)
+	case 0xE0:
+		Cb_set(0x04, &gb.Reg.B)
+	case 0xE1:
+		Cb_set(0x04, &gb.Reg.C)
+	case 0xE2:
+		Cb_set(0x04, &gb.Reg.D)
+	case 0xE3:
+		Cb_set(0x04, &gb.Reg.E)
+	case 0xE4:
+		Cb_set(0x04, &gb.Reg.H)
+	case 0xE5:
+		Cb_set(0x04, &gb.Reg.L)
+	case 0xE6:
+		Cb_SetHlpBit(gb, 0x04)
+	case 0xE7:
+		Cb_set(0x04, &gb.Reg.A)
+	case 0xE8:
+		Cb_set(0x05, &gb.Reg.B)
+	case 0xE9:
+		Cb_set(0x05, &gb.Reg.C)
+	case 0xEA:
+		Cb_set(0x05, &gb.Reg.D)
+	case 0xEB:
+		Cb_set(0x05, &gb.Reg.E)
+	case 0xEC:
+		Cb_set(0x05, &gb.Reg.H)
+	case 0xED:
+		Cb_set(0x05, &gb.Reg.L)
 	case 0xEE:
 		Cb_SetHlpBit(gb, 0x05)
 	case 0xEF:
