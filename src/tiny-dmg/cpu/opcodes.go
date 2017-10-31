@@ -245,6 +245,7 @@ var OpCodes = map[uint8]OpEntry{
 	0xEF: {"RST 28			", 16, func(gb *GbCpu) { Op_Rst(gb, 0x28) }},
 	0xF0: {"LD A, (a8)		", 12, Op_LDHAn}, //
 	0xF1: {"POP AF			", 12, Op_POP_AF},
+	0xF2: {"LD A, (C)		", 8, Op_LD_A_C},
 	0xF3: {"DI				", 4, Op_DI},
 	0xF5: {"PUSH AF			", 16, Op_PUSH_AF},
 	0xF6: {"OR d8			", 8, Op_OR_n},
@@ -584,6 +585,11 @@ func Op_LD_SP_HL(gb *GbCpu) {
 
 func Op_LD_C_A(gb *GbCpu) {
 	gb.mem.WriteByte(0xFF00+uint16(gb.Reg.C), gb.Reg.A)
+	gb.Reg.PC++
+}
+
+func Op_LD_A_C(gb *GbCpu) {
+	gb.Reg.A = gb.mem.GetByte(0xFF00 + uint16(gb.Reg.C))
 	gb.Reg.PC++
 }
 
