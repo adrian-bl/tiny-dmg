@@ -27,7 +27,7 @@ const (
 	RegInterruptFlag   = 0xFF0F
 	RegInterruptEnable = 0xFFFF
 	BitIrVblank        = (1 << 0)
-	BitIrStat          = (1 << 1)
+	BitIrLcdStatus     = (1 << 1)
 	BitIrTimer         = (1 << 2)
 	BitIrSerial        = (1 << 3)
 	BitIrJoypad        = (1 << 4)
