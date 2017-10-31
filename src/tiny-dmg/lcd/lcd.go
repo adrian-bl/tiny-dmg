@@ -81,7 +81,13 @@ func (l *Lcd) updateLcdState(set uint8) {
 	l.m.WriteRaw(memory.RegLcdState, state)
 }
 
-func (l *Lcd) Update(cycles uint8, vblankCb func()) {
+// vblankInterrupt gets called by the Update loop when
+// a vblank interrupt fired. Sets bit 0 in IF.
+func (l *Lcd) vblankInterrupt() {
+	l.m.WriteRawSet(memory.RegInterruptFlag, memory.BitIrVblank)
+}
+
+func (l *Lcd) Update(cycles uint8) {
 
 	if (l.m.GetByte(memory.RegLcdControl) & FlagLcdcEnable) == 0 {
 		// LCD is disabled, values are reset
@@ -94,7 +100,7 @@ func (l *Lcd) Update(cycles uint8, vblankCb func()) {
 
 		if l.cyclesCounter >= CyclesFullRefresh {
 			l.cyclesCounter -= CyclesFullRefresh
-			vblankCb()
+			l.vblankInterrupt()
 		}
 		fmt.Printf("LCD IS STILL OFF...\n")
 		return
@@ -118,8 +124,7 @@ func (l *Lcd) Update(cycles uint8, vblankCb func()) {
 		} else if l.cyclesCounter == LastVisibleScanline*CyclesPerScanline+statDelay {
 			// -> VBLANK state entered
 			l.updateLcdState(GpuModeVblank)
-			l.m.WriteRawAnd(memory.RegInterruptFlag, 1<<0)
-			vblankCb()
+			l.vblankInterrupt()
 		} else if l.cyclesCounter < LastVisibleScanline*CyclesPerScanline {
 			posInScanline := l.cyclesCounter % CyclesPerScanline
 

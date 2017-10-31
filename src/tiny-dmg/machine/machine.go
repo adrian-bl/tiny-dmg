@@ -31,7 +31,7 @@ func (mach *Machine) PowerOn() {
 	mach.cpu.PowerOn()
 }
 
-var XLOG = "mgba"
+var XLOG = "mgxba"
 
 func (mach *Machine) Run() {
 	fmt.Printf("Starting Z80 emulation, initial pc=%08X\n", mach.cpu.Reg.PC)
@@ -87,15 +87,7 @@ func (mach *Machine) Run() {
 		cycles := mach.cpu.Execute(op)
 
 		mach.cpu.ClockCycles += uint32(cycles)
-		mach.lcd.Update(cycles, mach.CallbackVblank)
-		mach.itr.Update(mach.cpu, mach.mem, mach.lcd)
-	}
-}
-
-func (mach *Machine) CallbackVblank() {
-	if mach.cpu.InterruptsEnabled {
-		mach.cpu.InterruptsEnabled = false
-		//	mach.cpu.Reg.PC--
-		//	cpu.Op_Rst(mach.cpu, 0x40)
+		mach.lcd.Update(cycles)
+		mach.itr.Update(mach.cpu, mach.mem)
 	}
 }

@@ -90,10 +90,6 @@ func (m *Memory) GetByte(addr uint16) byte {
 		// IE
 	}
 
-	if addr == 0xFF85 {
-		return 1
-	}
-
 	return m.memory[addr]
 }
 
@@ -181,9 +177,14 @@ func (m *Memory) GetRaw(addr uint16) byte {
 	return m.memory[addr]
 }
 
-// WriteRawAnd sets given bits at a raw memory location.
-func (m *Memory) WriteRawAnd(addr uint16, mask byte) {
+// WriteRawSet sets given bits at a raw memory location.
+func (m *Memory) WriteRawSet(addr uint16, mask byte) {
 	m.memory[addr] |= mask
+}
+
+// WriteRawClear clears given bits in a raw memory location.
+func (m *Memory) WriteRawClear(addr uint16, mask byte) {
+	m.memory[addr] &^= mask
 }
 
 func (m *Memory) Dump() {

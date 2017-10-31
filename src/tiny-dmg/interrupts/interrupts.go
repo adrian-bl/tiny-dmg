@@ -2,28 +2,31 @@ package interrupts
 
 import (
 	"tiny-dmg/cpu"
-	"tiny-dmg/lcd"
 	"tiny-dmg/memory"
 )
 
+// InterruptServiceRoutine addresses
+const (
+	IsrVblank    = 0x40
+	IsrLcdStatus = 0x48
+	IsrTimer     = 0x50
+	IsrSerial    = 0x58
+	IsrJoypad    = 0x60
+)
+
 type Interrupts struct {
-	lastScanline uint8
 }
 
 func New() *Interrupts {
 	return new(Interrupts)
 }
 
-func (i *Interrupts) Update(gb *cpu.GbCpu, m *memory.Memory, l *lcd.Lcd) {
-	scanline := m.GetByte(memory.RegCurrentScanline)
+func (i *Interrupts) Update(gb *cpu.GbCpu, m *memory.Memory) {
 
-	if scanline != i.lastScanline && scanline == lcd.LastVisibleScanline+4 {
-		//		fmt.Printf("----------------------YYXX: Scanline vblank !::: %d\n", scanline)
-		//		if gb.InterruptsEnabled {
-		//			gb.InterruptsEnabled = false
-		//			gb.Reg.PC--
-		//			cpu.Op_Rst(gb, 0x40)
-		//		}
+	if gb.InterruptsEnabled && m.GetByte(memory.RegInterruptEnable)&memory.BitIrVblank != 0 && m.GetByte(memory.RegInterruptFlag)&memory.BitIrVblank != 0 {
+		gb.InterruptsEnabled = false
+		m.WriteRawClear(memory.RegInterruptFlag, memory.BitIrVblank)
+		gb.Reg.PC-- // Op_Rst counts+1, to skip over itself. However: This is not a real opcode, so we first step one back.
+		cpu.Op_Rst(gb, IsrVblank)
 	}
-	i.lastScanline = scanline
 }
