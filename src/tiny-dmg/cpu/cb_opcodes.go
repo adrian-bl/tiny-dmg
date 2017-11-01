@@ -9,21 +9,21 @@ func Cb_Disp(gb *GbCpu) {
 
 	switch op {
 	case 0x00:
-		Cb_rlc(gb, &gb.Reg.B, gb.Reg.B)
+		Cb_rlc(gb, &gb.Reg.B)
 	case 0x01:
-		Cb_rlc(gb, &gb.Reg.C, gb.Reg.C)
+		Cb_rlc(gb, &gb.Reg.C)
 	case 0x02:
-		Cb_rlc(gb, &gb.Reg.D, gb.Reg.D)
+		Cb_rlc(gb, &gb.Reg.D)
 	case 0x03:
-		Cb_rlc(gb, &gb.Reg.E, gb.Reg.E)
+		Cb_rlc(gb, &gb.Reg.E)
 	case 0x04:
-		Cb_rlc(gb, &gb.Reg.H, gb.Reg.H)
+		Cb_rlc(gb, &gb.Reg.H)
 	case 0x05:
-		Cb_rlc(gb, &gb.Reg.L, gb.Reg.L)
+		Cb_rlc(gb, &gb.Reg.L)
 	case 0x06:
 		Cb_rlc_hlp(gb)
 	case 0x07:
-		Cb_rlc(gb, &gb.Reg.A, gb.Reg.A)
+		Cb_rlc(gb, &gb.Reg.A)
 	case 0x08:
 		Cb_rrc(gb, &gb.Reg.B)
 	case 0x09:
@@ -41,37 +41,37 @@ func Cb_Disp(gb *GbCpu) {
 	case 0x0F:
 		Cb_rrc(gb, &gb.Reg.A)
 	case 0x10:
-		Cb_rl(gb, &gb.Reg.B, gb.Reg.B)
+		Cb_rl(gb, &gb.Reg.B)
 	case 0x11:
-		Cb_rl(gb, &gb.Reg.C, gb.Reg.C)
+		Cb_rl(gb, &gb.Reg.C)
 	case 0x12:
-		Cb_rl(gb, &gb.Reg.D, gb.Reg.D)
+		Cb_rl(gb, &gb.Reg.D)
 	case 0x13:
-		Cb_rl(gb, &gb.Reg.E, gb.Reg.E)
+		Cb_rl(gb, &gb.Reg.E)
 	case 0x14:
-		Cb_rl(gb, &gb.Reg.H, gb.Reg.H)
+		Cb_rl(gb, &gb.Reg.H)
 	case 0x15:
-		Cb_rl(gb, &gb.Reg.L, gb.Reg.L)
+		Cb_rl(gb, &gb.Reg.L)
 	case 0x16:
 		Cb_rl_hlp(gb)
 	case 0x17:
-		Cb_rl(gb, &gb.Reg.A, gb.Reg.A)
+		Cb_rl(gb, &gb.Reg.A)
 	case 0x18:
-		Cb_rr(gb, &gb.Reg.B, gb.Reg.B)
+		Cb_rr(gb, &gb.Reg.B)
 	case 0x19:
-		Cb_rr(gb, &gb.Reg.C, gb.Reg.C)
+		Cb_rr(gb, &gb.Reg.C)
 	case 0x1A:
-		Cb_rr(gb, &gb.Reg.D, gb.Reg.D)
+		Cb_rr(gb, &gb.Reg.D)
 	case 0x1B:
-		Cb_rr(gb, &gb.Reg.E, gb.Reg.E)
+		Cb_rr(gb, &gb.Reg.E)
 	case 0x1C:
-		Cb_rr(gb, &gb.Reg.H, gb.Reg.H)
+		Cb_rr(gb, &gb.Reg.H)
 	case 0x1D:
-		Cb_rr(gb, &gb.Reg.L, gb.Reg.L)
+		Cb_rr(gb, &gb.Reg.L)
 	case 0x1E:
 		Cb_rr_hlp(gb)
 	case 0x1F:
-		Cb_rr(gb, &gb.Reg.A, gb.Reg.A)
+		Cb_rr(gb, &gb.Reg.A)
 	case 0x20:
 		Cb_sla(gb, &gb.Reg.B)
 	case 0x21:
@@ -121,21 +121,21 @@ func Cb_Disp(gb *GbCpu) {
 	case 0x37:
 		Cb_SwapReg(gb, &gb.Reg.A)
 	case 0x38:
-		Cb_srl(gb, &gb.Reg.B, gb.Reg.B)
+		Cb_srl(gb, &gb.Reg.B)
 	case 0x39:
-		Cb_srl(gb, &gb.Reg.C, gb.Reg.C)
+		Cb_srl(gb, &gb.Reg.C)
 	case 0x3A:
-		Cb_srl(gb, &gb.Reg.D, gb.Reg.D)
+		Cb_srl(gb, &gb.Reg.D)
 	case 0x3B:
-		Cb_srl(gb, &gb.Reg.E, gb.Reg.E)
+		Cb_srl(gb, &gb.Reg.E)
 	case 0x3C:
-		Cb_srl(gb, &gb.Reg.H, gb.Reg.H)
+		Cb_srl(gb, &gb.Reg.H)
 	case 0x3D:
-		Cb_srl(gb, &gb.Reg.L, gb.Reg.L)
+		Cb_srl(gb, &gb.Reg.L)
 	case 0x3E:
 		Cb_srl_hlp(gb)
 	case 0x3F:
-		Cb_srl(gb, &gb.Reg.A, gb.Reg.A)
+		Cb_srl(gb, &gb.Reg.A)
 	case 0x40:
 		Cb_checkBit(gb, 0x00, gb.Reg.B)
 	case 0x41:
@@ -600,23 +600,21 @@ func Cb_checkBit(gb *GbCpu, bit uint8, value uint8) {
 	}
 }
 
-func Cb_srl(gb *GbCpu, target *uint8, value uint8) {
+func Cb_srl(gb *GbCpu, target *uint8) {
 	gb.Reg.F &= ^FlagMask
 
-	if (value & 0x01) != 0 {
+	if *target&0x01 != 0 {
 		gb.Reg.F |= FlagC
 	}
 
-	value >>= 1
+	*target = *target >> 1
 
-	if value == 0 {
+	if *target == 0 {
 		gb.Reg.F |= FlagZ
 	}
-
-	*target = value
 }
 
-func Cb_rl(gb *GbCpu, target *uint8, value uint8) {
+func Cb_rl(gb *GbCpu, target *uint8) {
 	oldMask := gb.Reg.F
 	gb.Reg.F &= ^FlagMask
 
@@ -625,37 +623,35 @@ func Cb_rl(gb *GbCpu, target *uint8, value uint8) {
 		carry = 1
 	}
 
-	if value&0x80 != 0 {
+	if *target&0x80 != 0 {
 		gb.Reg.F |= FlagC
 	}
 
-	*target = (value << 1) | carry
+	*target = (*target << 1) | carry
 
 	if *target == 0 {
 		gb.Reg.F |= FlagZ
 	}
 }
 
-func Cb_rlc(gb *GbCpu, target *uint8, value uint8) {
+func Cb_rlc(gb *GbCpu, target *uint8) {
 	gb.Reg.F &= ^FlagMask
 
 	carry := uint8(0)
-	if value&0x80 != 0 {
+	if *target&0x80 != 0 {
 		carry = 1
 		gb.Reg.F |= FlagC
 	}
-
-	*target = (value << 1) | carry
-
-	if value == 0 {
+	if *target == 0 {
 		gb.Reg.F |= FlagZ
 	}
+	*target = (*target << 1) | carry
 }
 
 func Cb_rlc_hlp(gb *GbCpu) {
 	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
 	val := gb.mem.GetByte(hl)
-	Cb_rlc(gb, &val, val)
+	Cb_rlc(gb, &val)
 	gb.mem.WriteByte(hl, val)
 }
 
@@ -669,14 +665,14 @@ func Cb_rrc_hlp(gb *GbCpu) {
 func Cb_rl_hlp(gb *GbCpu) {
 	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
 	val := gb.mem.GetByte(hl)
-	Cb_rl(gb, &val, val)
+	Cb_rl(gb, &val)
 	gb.mem.WriteByte(hl, val)
 }
 
 func Cb_rr_hlp(gb *GbCpu) {
 	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
 	val := gb.mem.GetByte(hl)
-	Cb_rr(gb, &val, val)
+	Cb_rr(gb, &val)
 	gb.mem.WriteByte(hl, val)
 }
 
@@ -690,7 +686,7 @@ func Cb_sla_hlp(gb *GbCpu) {
 func Cb_srl_hlp(gb *GbCpu) {
 	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
 	val := gb.mem.GetByte(hl)
-	Cb_srl(gb, &val, val)
+	Cb_srl(gb, &val)
 	gb.mem.WriteByte(hl, val)
 }
 
@@ -709,25 +705,23 @@ func Cb_SwapReg_hlp(gb *GbCpu) {
 }
 
 // 9 bit rotation to right
-func Cb_rr(gb *GbCpu, target *uint8, value uint8) {
+func Cb_rr(gb *GbCpu, target *uint8) {
 	carry := uint8(0)
-	bit0 := (value & 0x1) != 0
+	bit0 := (*target & 0x1) != 0
 
 	if gb.Reg.F&FlagC != 0 {
 		carry = 1 << 7 // carry is copied to bit 7
 	}
 
 	gb.Reg.F &= ^FlagMask
-	value = (value >> 1) | carry
+	*target = (*target >> 1) | carry
 
 	if bit0 {
 		gb.Reg.F |= FlagC
 	}
-	if value == 0 {
+	if *target == 0 {
 		gb.Reg.F |= FlagZ
 	}
-
-	*target = value
 }
 
 // Note that this is NOT the same as math.go:Do_Rrc
