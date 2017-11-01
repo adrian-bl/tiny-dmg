@@ -221,8 +221,6 @@ func Do_Rrc(gb *GbCpu, target *uint8) {
 	if carry != 0 {
 		gb.Reg.F |= FlagC
 		*target |= 0x80
-	} else {
-		gb.Reg.F &= ^FlagC
 	}
 
 	gb.Reg.PC++

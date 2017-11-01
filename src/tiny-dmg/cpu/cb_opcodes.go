@@ -25,28 +25,21 @@ func Cb_Disp(gb *GbCpu) {
 	case 0x07:
 		Cb_rlc(gb, &gb.Reg.A, gb.Reg.A)
 	case 0x08:
-		Do_Rrc(gb, &gb.Reg.B)
-		gb.Reg.PC-- // undo
+		Cb_rrc(gb, &gb.Reg.B)
 	case 0x09:
-		Do_Rrc(gb, &gb.Reg.C)
-		gb.Reg.PC-- // undo
+		Cb_rrc(gb, &gb.Reg.C)
 	case 0x0A:
-		Do_Rrc(gb, &gb.Reg.D)
-		gb.Reg.PC-- // undo
+		Cb_rrc(gb, &gb.Reg.D)
 	case 0x0B:
-		Do_Rrc(gb, &gb.Reg.E)
-		gb.Reg.PC-- // undo
+		Cb_rrc(gb, &gb.Reg.E)
 	case 0x0C:
-		Do_Rrc(gb, &gb.Reg.H)
-		gb.Reg.PC-- // undo
+		Cb_rrc(gb, &gb.Reg.H)
 	case 0x0D:
-		Do_Rrc(gb, &gb.Reg.L)
-		gb.Reg.PC-- // undo
+		Cb_rrc(gb, &gb.Reg.L)
 	case 0x0E:
 		Cb_rrc_hlp(gb)
 	case 0x0F:
-		Do_Rrc(gb, &gb.Reg.A)
-		gb.Reg.PC-- // undo
+		Cb_rrc(gb, &gb.Reg.A)
 	case 0x10:
 		Cb_rl(gb, &gb.Reg.B, gb.Reg.B)
 	case 0x11:
@@ -636,14 +629,11 @@ func Cb_rl(gb *GbCpu, target *uint8, value uint8) {
 		gb.Reg.F |= FlagC
 	}
 
-	value <<= 1
-	value |= carry
+	*target = (value << 1) | carry
 
-	if value == 0 {
+	if *target == 0 {
 		gb.Reg.F |= FlagZ
 	}
-
-	*target = value
 }
 
 func Cb_rlc(gb *GbCpu, target *uint8, value uint8) {
@@ -655,14 +645,11 @@ func Cb_rlc(gb *GbCpu, target *uint8, value uint8) {
 		gb.Reg.F |= FlagC
 	}
 
-	value <<= 1
+	*target = (value << 1) | carry
 
 	if value == 0 {
 		gb.Reg.F |= FlagZ
 	}
-
-	value |= carry
-	*target = value
 }
 
 func Cb_rlc_hlp(gb *GbCpu) {
@@ -675,9 +662,8 @@ func Cb_rlc_hlp(gb *GbCpu) {
 func Cb_rrc_hlp(gb *GbCpu) {
 	hl := uint16(gb.Reg.H)<<8 + uint16(gb.Reg.L)
 	val := gb.mem.GetByte(hl)
-	Do_Rrc(gb, &val)
+	Cb_rrc(gb, &val)
 	gb.mem.WriteByte(hl, val)
-	gb.Reg.PC-- // undo
 }
 
 func Cb_rl_hlp(gb *GbCpu) {
@@ -742,6 +728,21 @@ func Cb_rr(gb *GbCpu, target *uint8, value uint8) {
 	}
 
 	*target = value
+}
+
+// Note that this is NOT the same as math.go:Do_Rrc
+func Cb_rrc(gb *GbCpu, target *uint8) {
+	gb.Reg.F &= ^FlagMask
+
+	carry := *target & 0x01
+	*target = (*target >> 1) | (carry << 7)
+
+	if carry != 0 {
+		gb.Reg.F |= FlagC
+	}
+	if *target == 0 {
+		gb.Reg.F |= FlagZ
+	}
 }
 
 func Cb_res_16(gb *GbCpu, bit, h, l uint8) {
