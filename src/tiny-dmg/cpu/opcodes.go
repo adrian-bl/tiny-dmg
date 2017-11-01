@@ -35,7 +35,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x14: {"INC D			", 4, func(gb *GbCpu) { Do_Inc_Uint8(gb, &gb.Reg.D) }},
 	0x15: {"DEC D			", 4, func(gb *GbCpu) { Do_Dec_Uint8(gb, &gb.Reg.D) }},
 	0x16: {"LD D, d8		", 8, Op_LDDn},
-	0x17: {"RLA				", 4, func(gb *GbCpu) { Cb_rl(gb, &gb.Reg.A, gb.Reg.A); gb.Reg.PC++ }},
+	0x17: {"RLA				", 4, Op_RLA},
 	0x18: {"JR r8			", 12, Op_JR_n},
 	0x19: {"ADD HL, DE		", 8, Op_ADD_HL_DE},
 	0x1A: {"LD A, (DE)		", 8, Op_LD_A_DE},
@@ -997,6 +997,23 @@ func Op_RRA(gb *GbCpu) {
 	gb.Reg.A >>= 1
 	gb.Reg.A += carry
 
+	gb.Reg.PC++
+}
+
+func Op_RLA(gb *GbCpu) {
+	oldMask := gb.Reg.F
+	gb.Reg.F &= ^FlagMask
+
+	// Check if the shifted bit is set
+	bit7 := gb.Reg.A&0x80 != 0
+	gb.Reg.A = gb.Reg.A << 1
+
+	if oldMask&FlagC != 0 {
+		gb.Reg.A |= 0x01
+	}
+	if bit7 {
+		gb.Reg.F |= FlagC
+	}
 	gb.Reg.PC++
 }
 
