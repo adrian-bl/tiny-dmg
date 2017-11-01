@@ -6,7 +6,6 @@ import (
 
 func Cb_Disp(gb *GbCpu) {
 	op := gb.mem.GetByte(gb.Reg.PC + 1)
-	fmt.Printf("-> CB %02X\n", op)
 
 	switch op {
 	case 0x00:

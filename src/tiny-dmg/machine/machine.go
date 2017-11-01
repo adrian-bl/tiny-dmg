@@ -31,7 +31,7 @@ func (mach *Machine) PowerOn() {
 	mach.cpu.PowerOn()
 }
 
-var XLOG = "verbose"
+var XLOG = "mgba"
 
 func (mach *Machine) Run() {
 	fmt.Printf("Starting Z80 emulation, initial pc=%08X\n", mach.cpu.Reg.PC)
@@ -66,13 +66,22 @@ func (mach *Machine) Run() {
 				fmt.Printf("-")
 			}
 
-			fmt.Printf("] c=%d ## %d, c=%d, LY(FF44) = %X, >> FIXME: STAT = %X (%X), LCDC=%02X, op=%s\n", dbgopcode.ClockCycles, i, mach.cpu.ClockCycles, mach.mem.GetByte(0xFF44), mach.mem.GetByte(0xFF41), mach.mem.GetByte(0xFF41)&0x3, mach.mem.GetByte(0xFF40), dbgopcode.Name)
+			name := dbgopcode.Name
+			if op == 0xCB {
+				name = fmt.Sprintf("CB%02X\n", mach.mem.GetByte(mach.cpu.Reg.PC+1))
+			}
+
+			fmt.Printf("] c=%d ## %d, c=%d, LY(FF44) = %X, >> FIXME: STAT = %X (%X), LCDC=%02X, op=%s\n", dbgopcode.ClockCycles, i, mach.cpu.ClockCycles, mach.mem.GetByte(0xFF44), mach.mem.GetByte(0xFF41), mach.mem.GetByte(0xFF41)&0x3, mach.mem.GetByte(0xFF40), name)
 		}
 
 		if XLOG == "mgba" {
-			fmt.Printf("A: %02X F: %02X B: %02X C: %02X D: %02X E: %02X H: %02X L: %02X SP: %04X PC: %04X |\n",
+			name := dbgopcode.Name
+			if op == 0xCB {
+				name = fmt.Sprintf("CB%02X\n", mach.mem.GetByte(mach.cpu.Reg.PC+1))
+			}
+			fmt.Printf("A: %02X F: %02X B: %02X C: %02X D: %02X E: %02X H: %02X L: %02X SP: %04X PC: %04X | op=%s\n",
 				mach.cpu.Reg.A, mach.cpu.Reg.F, mach.cpu.Reg.B, mach.cpu.Reg.C,
-				mach.cpu.Reg.D, mach.cpu.Reg.E, mach.cpu.Reg.H, mach.cpu.Reg.L, mach.cpu.Reg.SP, mach.cpu.Reg.PC)
+				mach.cpu.Reg.D, mach.cpu.Reg.E, mach.cpu.Reg.H, mach.cpu.Reg.L, mach.cpu.Reg.SP, mach.cpu.Reg.PC, name)
 		}
 
 		i++
