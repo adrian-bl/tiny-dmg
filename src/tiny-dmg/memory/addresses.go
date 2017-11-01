@@ -8,6 +8,7 @@ const (
 	RegTimerCounter          = 0xFF05
 	RegTimerModulo           = 0xFF06
 	RegTimerControl          = 0xFF07
+	RegDisableRom            = 0xFF50
 )
 
 // LCD related

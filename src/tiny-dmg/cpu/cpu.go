@@ -45,17 +45,17 @@ func New(m *memory.Memory) (gb *GbCpu, err error) {
 }
 
 func (gb *GbCpu) PowerOn() {
-	gb.Reg.SP = 0xFFFE
-	gb.Reg.PC = 0x0100
+	gb.Reg.SP = 0x00
+	gb.Reg.PC = 0x00
 
-	gb.Reg.A = 0x01
-	gb.Reg.F = 0xb0
+	gb.Reg.A = 0x00
+	gb.Reg.F = 0x00
 	gb.Reg.B = 0x00
-	gb.Reg.C = 0x13
+	gb.Reg.C = 0x00
 	gb.Reg.D = 0x00
-	gb.Reg.E = 0xd8
-	gb.Reg.H = 0x01
-	gb.Reg.L = 0x4d
+	gb.Reg.E = 0x00
+	gb.Reg.H = 0x00
+	gb.Reg.L = 0x00
 }
 
 func (gb *GbCpu) Execute(opcode uint8) uint8 {

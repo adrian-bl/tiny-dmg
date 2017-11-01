@@ -1,6 +1,7 @@
 package rom
 
 import (
+	"fmt"
 	"io/ioutil"
 )
 
@@ -15,6 +16,7 @@ type RomImage struct {
 	RomSize          byte   // 0x148
 	RamSize          byte   // 0x149
 	RomMaskVersion   byte   // 0x14C
+	IsBios           bool
 }
 
 func NewFromDisk(path string) (r RomImage, err error) {
@@ -22,11 +24,17 @@ func NewFromDisk(path string) (r RomImage, err error) {
 
 	r.blob, err = ioutil.ReadFile(path)
 	if err == nil {
-		r.CGB = (r.blob[0x143] == 1)
-		r.SGB = (r.blob[0x146] == 1)
-		r.RomType = r.blob[0x147]
-		r.Title = string(r.blob[0x134:0x143]) // fixme: trim junk?
-		r.ManufacturerCode = string(r.blob[0x13f:0x142])
+		if len(r.blob) == 256 {
+			r.IsBios = true
+		} else if len(r.blob) < 0x142 {
+			err = fmt.Errorf("File too small / not a valid rom")
+		} else {
+			r.CGB = (r.blob[0x143] == 1)
+			r.SGB = (r.blob[0x146] == 1)
+			r.RomType = r.blob[0x147]
+			r.Title = string(r.blob[0x134:0x143]) // fixme: trim junk?
+			r.ManufacturerCode = string(r.blob[0x13f:0x142])
+		}
 	}
 	return
 }

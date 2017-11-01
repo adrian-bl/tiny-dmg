@@ -15,50 +15,15 @@ type Memory struct {
 	rom    rom.RomImage
 }
 
-func New(r rom.RomImage, j *joypad.Joypad) (m *Memory, err error) {
+func New(b, r rom.RomImage, j *joypad.Joypad) (m *Memory, err error) {
 	m = new(Memory)
-	copy(m.memory[0:], r.GetBytes())
-	m.mbc = mbc.GetMbc(r.RomType)
+	m.mbc = mbc.GetMbc(b, r)
 	m.joypad = j
 	m.rom = r
 	return
 }
 
 func (m *Memory) PowerOn() {
-	//m.WriteByte(RegJoypadInput, 0xCF) // FIXME: Remove once we have joypad emulation
-	m.WriteRaw(0xFF05, 0x00)
-	m.WriteRaw(0xFF06, 0x00)
-	m.WriteRaw(0xFF07, 0x00)
-	m.WriteRaw(0xFF10, 0x80)
-	m.WriteRaw(0xFF11, 0xBF)
-	m.WriteRaw(0xFF12, 0xF3)
-	m.WriteRaw(0xFF14, 0xBF)
-	m.WriteRaw(0xFF16, 0x3F)
-	m.WriteRaw(0xFF17, 0x00)
-	m.WriteRaw(0xFF19, 0xBF)
-	m.WriteRaw(0xFF1A, 0x7F)
-	m.WriteRaw(0xFF1B, 0xFF)
-	m.WriteRaw(0xFF1C, 0x9F)
-	m.WriteRaw(0xFF1E, 0xBF)
-	m.WriteRaw(0xFF20, 0xFF)
-	m.WriteRaw(0xFF21, 0x00)
-	m.WriteRaw(0xFF22, 0x00)
-	m.WriteRaw(0xFF23, 0xBF)
-	m.WriteRaw(0xFF24, 0x77)
-	m.WriteRaw(0xFF25, 0xF3)
-	m.WriteRaw(0xFF26, 0xF1)
-	m.WriteRaw(RegLcdControl, 0x91)
-	m.WriteRaw(RegLcdState, 0x81)
-	m.WriteRaw(RegScrollY, 0x00)
-	m.WriteRaw(RegScrollX, 0x00)
-	m.WriteRaw(RegCurrentScanline, 0x00)
-	m.WriteRaw(RegLYCompare, 0x00)
-	m.WriteRaw(0xFF47, 0xFC)
-	m.WriteRaw(0xFF48, 0xFF)
-	m.WriteRaw(0xFF49, 0xFF)
-	m.WriteRaw(0xFF4A, 0x00)
-	m.WriteRaw(0xFF4B, 0x00)
-	m.WriteRaw(0xFFFF, 0x00)
 	fmt.Printf("# memory initialized\n")
 }
 
@@ -129,6 +94,11 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 		case RegDoDMA:
 			m.regWriteDoDma(val)
 			return
+		case RegDisableRom:
+			// This is usually only used by the bios to disable itself.
+			// When this is called, mbc is most likely the fake bios handler - however:
+			// all other MBCs just handle this as a NOOP.
+			m.mbc.DisableBootRom(&m.mbc, val)
 		case RegDivider:
 			val = 0
 			// does NOT return: write just resets it.

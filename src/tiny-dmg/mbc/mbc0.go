@@ -8,7 +8,7 @@ import (
 type Mbc0 struct {
 }
 
-func NewMbc0() MemoryBankController {
+func newMbc0() MemoryBankController {
 	return new(Mbc0)
 }
 
@@ -25,4 +25,8 @@ func (mbc *Mbc0) WriteExternalRam(m RawMemoryAccess, addr uint16, val uint8) {
 }
 func (mbc *Mbc0) ReadExternalRam(m RawMemoryAccess, addr uint16) uint8 {
 	return m.GetRaw(addr)
+}
+
+func (mbc *Mbc0) DisableBootRom(x *MemoryBankController, val uint8) {
+	// noop
 }

@@ -10,6 +10,7 @@ type MemoryBankController interface {
 	WriteToRom(uint16, uint8)
 	WriteExternalRam(RawMemoryAccess, uint16, uint8)
 	ReadExternalRam(RawMemoryAccess, uint16) byte
+	DisableBootRom(*MemoryBankController, uint8)
 }
 
 type RawMemoryAccess interface {
@@ -17,13 +18,15 @@ type RawMemoryAccess interface {
 	WriteRaw(uint16, byte)
 }
 
-func GetMbc(t uint8) MemoryBankController {
-	switch t {
+func GetMbc(b, r rom.RomImage) MemoryBankController {
+	var mbc MemoryBankController
+	switch r.RomType {
 	case 0:
-		return NewMbc0()
+		mbc = newMbc0()
 	case 1:
-		return NewMbc1()
+		mbc = newMbc1()
 	default:
-		panic(fmt.Errorf("ROM requested MBC%d, but no such implementation is known.\n", t))
+		panic(fmt.Errorf("ROM requested MBC%d, but no such implementation is known.\n", r.RomType))
 	}
+	return newBios(b, mbc)
 }

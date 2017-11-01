@@ -18,13 +18,18 @@ func main() {
 		panic(err)
 	}
 
+	b, err := rom.NewFromDisk("/tmp/bios.bin")
+	if err != nil {
+		panic(err)
+	}
+
 	r, err := rom.NewFromDisk("/tmp/hello-world.gb")
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("Loaded rom with name: *%s*\n", r.Title)
 
-	m, err := memory.New(r, j)
+	m, err := memory.New(b, r, j)
 	if err != nil {
 		panic(err)
 	}

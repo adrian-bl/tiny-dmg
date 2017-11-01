@@ -10,7 +10,7 @@ type Mbc1 struct {
 	ramEnabled bool
 }
 
-func NewMbc1() MemoryBankController {
+func newMbc1() MemoryBankController {
 	mbc := new(Mbc1)
 	mbc.bank = 1
 	mbc.ramEnabled = false
@@ -48,4 +48,8 @@ func (mbc *Mbc1) ReadExternalRam(m RawMemoryAccess, addr uint16) uint8 {
 		return m.GetRaw(addr)
 	}
 	return 0xFF
+}
+
+func (mbc *Mbc1) DisableBootRom(x *MemoryBankController, val uint8) {
+	// noop
 }
