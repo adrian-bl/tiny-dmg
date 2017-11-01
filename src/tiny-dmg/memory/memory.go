@@ -99,6 +99,7 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 			// When this is called, mbc is most likely the fake bios handler - however:
 			// all other MBCs just handle this as a NOOP.
 			m.mbc.DisableBootRom(&m.mbc, val)
+			return
 		case RegDivider:
 			val = 0
 			// does NOT return: write just resets it.
