@@ -26,7 +26,13 @@ func (mbc *Mbc1) ReadFromRom(r rom.RomImage, addr uint16) uint8 {
 }
 
 func (mbc *Mbc1) WriteToRom(addr uint16, val uint8) {
-	if addr >= 2000 && addr <= 0x3FFF {
+	if addr <= 0x1FFF {
+		if val == 0xA {
+			mbc.ramEnabled = true
+		} else {
+			mbc.ramEnabled = false
+		}
+	} else if addr >= 2000 && addr <= 0x3FFF {
 		bank := val & 0x1F
 		if bank == 0 {
 			bank = 1
