@@ -100,6 +100,8 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 			// all other MBCs just handle this as a NOOP.
 			m.mbc.DisableBootRom(&m.mbc, val)
 			return
+		case RegSerialTransferControl:
+			// handled by machine.
 		case RegDivider:
 			val = 0
 			// does NOT return: write just resets it.

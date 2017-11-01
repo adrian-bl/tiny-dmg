@@ -99,6 +99,7 @@ func (mach *Machine) Run() {
 		mach.lcd.Update(cycles)
 		mach.itr.Update(mach.cpu, mach.mem)
 		dividerHack(mach.cpu, mach.mem)
+		serialHack(mach.cpu, mach.mem)
 	}
 }
 
@@ -108,5 +109,17 @@ func dividerHack(gb *cpu.GbCpu, m *memory.Memory) {
 		v := m.GetByte(memory.RegDivider)
 		v++
 		m.WriteRaw(memory.RegDivider, v)
+	}
+}
+
+// Super quick hack to get Alleyway past the title screen.
+func serialHack(gb *cpu.GbCpu, m *memory.Memory) {
+	if gb.ClockCycles%1024 == 0 {
+		v := m.GetRaw(memory.RegSerialTransferControl)
+		if v&(1<<7) != 0 {
+			v &^= (1 << 7)
+			m.WriteRaw(memory.RegSerialTransferControl, v)
+			m.WriteRawSet(memory.RegInterruptFlag, memory.BitIrSerial)
+		}
 	}
 }
