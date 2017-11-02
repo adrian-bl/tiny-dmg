@@ -39,7 +39,7 @@ func (m *Memory) GetByte(addr uint16) byte {
 	} else if addr <= 0xDFFF {
 		// Work RAM bank 1
 	} else if addr <= 0xFDFF {
-		panic(fmt.Errorf("Mirror of C000~DDFF, not implemented yet!"))
+		addr -= 0x1000
 	} else if addr <= 0xFE9F {
 		// OAM
 	} else if addr <= 0xFEFF {
@@ -75,7 +75,7 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 	} else if addr <= 0xDFFF {
 		fmt.Printf("Write to work RAM 1~N? %X = %X\n", addr, val)
 	} else if addr <= 0xFDFF {
-		panic(fmt.Errorf("Mirror of C000~DDFF, not implemented yet!"))
+		addr -= 0x1000
 	} else if addr <= 0xFE9F {
 		fmt.Printf("Write to OAM: %X = %X\n", addr, val)
 	} else if addr <= 0xFEFF {
