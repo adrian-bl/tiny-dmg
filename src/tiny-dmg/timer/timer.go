@@ -1,7 +1,6 @@
 package timer
 
 import (
-	"fmt"
 	"tiny-dmg/cpu"
 	"tiny-dmg/memory"
 )
