@@ -10,6 +10,7 @@ type GbCpu struct {
 	Reg               Registers
 	mem               *memory.Memory
 	ClockCycles       uint32
+	Halted            bool
 }
 
 const (

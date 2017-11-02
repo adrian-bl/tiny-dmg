@@ -96,7 +96,13 @@ func (mach *Machine) Run() {
 			}
 		}
 
+		oldPC := mach.cpu.Reg.PC
 		cycles := mach.cpu.Execute(op)
+
+		if mach.cpu.Halted && op != 0x76 /* HALT */ {
+			// The CPU is in halted mode, so we are not actually advancing...
+			mach.cpu.Reg.PC = oldPC
+		}
 
 		mach.cpu.ClockCycles += uint32(cycles)
 		mach.lcd.Update(cycles)
