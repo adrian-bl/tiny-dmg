@@ -48,6 +48,8 @@ func (m *Memory) GetByte(addr uint16) byte {
 		switch addr {
 		case RegJoypadInput:
 			return m.joypad.GetJoypadByte(m.memory[addr])
+		case RegTimerControl:
+			return m.memory[addr] | 0xF8 // bit 7->3 are always set
 		}
 	} else if addr <= 0xFFFE {
 		// HRAM
