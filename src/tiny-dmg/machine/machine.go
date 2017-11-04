@@ -114,11 +114,11 @@ func (mach *Machine) Run() {
 
 // Super quick hack to get Alleyway past the title screen.
 func serialHack(gb *cpu.GbCpu, m *memory.Memory) {
-	if gb.ClockCycles%1024 == 0 {
+	if gb.ClockCycles%4096 == 0 {
 		v := m.GetRaw(memory.RegSerialTransferControl)
-		if v&(1<<7) != 0 {
-			v &^= (1 << 7)
-			m.WriteRaw(memory.RegSerialTransferControl, v)
+		if v == 0x81 { // Transfer with internal clock requested
+			m.WriteRaw(memory.RegSerialTransferControl, 0x01) // Clear transfer
+			m.WriteRaw(memory.RegSerialTransferData, 0xFF)    // Simulate no data
 			m.WriteRawSet(memory.RegInterruptFlag, memory.BitIrSerial)
 		}
 	}
