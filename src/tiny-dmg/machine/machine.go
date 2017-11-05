@@ -39,7 +39,8 @@ var XLOG = "mgba"
 func (mach *Machine) Run() {
 	fmt.Printf("Starting Z80 emulation, initial pc=%08X\n", mach.cpu.Reg.PC)
 
-	op := byte(0)
+	op := uint8(0)
+	cycles := uint8(0)
 	i := 1
 	for {
 		op = mach.mem.GetByte(mach.cpu.Reg.PC) // raw opcode from ROM
@@ -96,12 +97,11 @@ func (mach *Machine) Run() {
 			}
 		}
 
-		oldPC := mach.cpu.Reg.PC
-		cycles := mach.cpu.Execute(op)
-
-		if mach.cpu.Halted && op != 0x76 /* HALT */ {
-			// The CPU is in halted mode, so we are not actually advancing...
-			mach.cpu.Reg.PC = oldPC
+		if mach.cpu.Halted == false {
+			cycles = mach.cpu.Execute(op)
+		} else {
+			// simulate a NOP
+			cycles = 4
 		}
 
 		mach.cpu.ClockCycles += uint32(cycles)
