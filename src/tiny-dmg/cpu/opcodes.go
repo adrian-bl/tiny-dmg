@@ -130,7 +130,7 @@ var OpCodes = map[uint8]OpEntry{
 	0x73: {"LD (HL), E		", 8, func(gb *GbCpu) { Op_LD_HL_x(gb, gb.Reg.E) }},
 	0x74: {"LD (HL), H		", 8, func(gb *GbCpu) { Op_LD_HL_x(gb, gb.Reg.H) }},
 	0x75: {"LD (HL), L		", 8, func(gb *GbCpu) { Op_LD_HL_x(gb, gb.Reg.L) }},
-	0x76: {"HALT			", 4, func(gb *GbCpu) { gb.Halted = true; gb.Reg.PC += 2 /* halt bug */ }},
+	0x76: {"HALT			", 4, func(gb *GbCpu) { gb.Halted = true; gb.Reg.PC++ }}, // FIXME halt bug!
 	0x77: {"LD (HL), A		", 8, func(gb *GbCpu) { Op_LD_HL_x(gb, gb.Reg.A) }},
 	0x78: {"LD A, B			", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.B; gb.Reg.PC++ }},
 	0x79: {"LD A, C			", 4, func(gb *GbCpu) { gb.Reg.A = gb.Reg.C; gb.Reg.PC++ }},
