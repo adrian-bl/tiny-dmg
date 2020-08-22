@@ -1,7 +1,8 @@
 package main
 
 import (
-	"fmt"
+	"flag"
+	"log"
 
 	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/cpu"
 	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/joypad"
@@ -12,23 +13,40 @@ import (
 	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/ui"
 )
 
+var (
+	flagBios = flag.String("bios", "", "path to DMG boot bios")
+	flagRom  = flag.String("rom", "", "path to DMG rom")
+)
+
 func main() {
+	flag.Parse()
 
 	j, err := joypad.New()
 	if err != nil {
 		panic(err)
 	}
 
-	b, err := rom.NewFromDisk("/tmp/bios.bin")
-	if err != nil {
-		panic(err)
+	var b *rom.RomImage
+	if *flagBios != "" {
+		log.Printf("Loading bios from %s\n", *flagBios)
+		if b, err = rom.NewFromDisk(*flagBios); err != nil {
+			log.Fatalf("failed to read bios: %v\n", err)
+		}
+	} else {
+		log.Printf("Using builtin bios\n")
+		b = rom.NewBuiltinBios()
 	}
 
-	r, err := rom.NewFromDisk("/tmp/hello-world.gb")
-	if err != nil {
-		panic(err)
+	var r *rom.RomImage
+	if *flagRom != "" {
+		log.Printf("Loading ROM from %s\n", *flagRom)
+		if r, err = rom.NewFromDisk(*flagRom); err != nil {
+			log.Fatalf("failed to read ROM: %v\n", err)
+		}
+	} else {
+		log.Fatalf("-rom flag must point to a DMG rom\n")
 	}
-	fmt.Printf("Loaded rom with name: *%s*\n", r.Title)
+	log.Printf("Loaded ROM with title %s\n", r.Title)
 
 	m, err := memory.New(b, r, j)
 	if err != nil {
