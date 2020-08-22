@@ -7,7 +7,7 @@ import (
 )
 
 type MemoryBankController interface {
-	ReadFromRom(rom.RomImage, uint16) byte
+	ReadFromRom(*rom.RomImage, uint16) byte
 	WriteToRom(uint16, uint8)
 	WriteExternalRam(RawMemoryAccess, uint16, uint8)
 	ReadExternalRam(RawMemoryAccess, uint16) byte
@@ -19,7 +19,7 @@ type RawMemoryAccess interface {
 	WriteRaw(uint16, byte)
 }
 
-func GetMbc(b, r rom.RomImage) MemoryBankController {
+func GetMbc(b, r *rom.RomImage) MemoryBankController {
 	var mbc MemoryBankController
 	switch r.RomType {
 	case 0:

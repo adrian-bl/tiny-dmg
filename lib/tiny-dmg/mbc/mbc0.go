@@ -13,7 +13,7 @@ func newMbc0() MemoryBankController {
 	return new(Mbc0)
 }
 
-func (mbc *Mbc0) ReadFromRom(r rom.RomImage, addr uint16) uint8 {
+func (mbc *Mbc0) ReadFromRom(r *rom.RomImage, addr uint16) uint8 {
 	return r.GetByte(uint32(addr))
 }
 

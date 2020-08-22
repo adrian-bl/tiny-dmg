@@ -13,10 +13,10 @@ type Memory struct {
 	memory [0x10000]byte // memory ranges from 0x0000 - 0xFFFF
 	joypad *joypad.Joypad
 	mbc    mbc.MemoryBankController
-	rom    rom.RomImage
+	rom    *rom.RomImage
 }
 
-func New(b, r rom.RomImage, j *joypad.Joypad) (m *Memory, err error) {
+func New(b, r *rom.RomImage, j *joypad.Joypad) (m *Memory, err error) {
 	m = new(Memory)
 	m.mbc = mbc.GetMbc(b, r)
 	m.joypad = j

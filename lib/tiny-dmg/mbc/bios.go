@@ -13,7 +13,7 @@ type Bios struct {
 // bios but dispatches every read beyond the bios to the original ROM.
 // It is also the only MBC to implement the DisableBootRom() call
 // which will cause itself to be destroyed and replaced with the real ROM.
-func newBios(r rom.RomImage, mbc MemoryBankController) MemoryBankController {
+func newBios(r *rom.RomImage, mbc MemoryBankController) MemoryBankController {
 	b := new(Bios)
 	b.bios = r.GetBytes()
 	b.mbc = mbc
@@ -21,7 +21,7 @@ func newBios(r rom.RomImage, mbc MemoryBankController) MemoryBankController {
 }
 
 // ReadFromRom reads given address from the ROM.
-func (b *Bios) ReadFromRom(r rom.RomImage, addr uint16) uint8 {
+func (b *Bios) ReadFromRom(r *rom.RomImage, addr uint16) uint8 {
 	if addr < uint16(len(b.bios)) {
 		return b.bios[addr]
 	}
