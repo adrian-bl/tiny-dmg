@@ -1,7 +1,7 @@
 package mbc
 
 import (
-	"tiny-dmg/rom"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/rom"
 )
 
 type Bios struct {

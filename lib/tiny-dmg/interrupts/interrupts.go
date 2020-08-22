@@ -1,8 +1,8 @@
 package interrupts
 
 import (
-	"tiny-dmg/cpu"
-	"tiny-dmg/memory"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/cpu"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/memory"
 )
 
 // InterruptServiceRoutine addresses

@@ -2,7 +2,8 @@ package mbc
 
 import (
 	"fmt"
-	"tiny-dmg/rom"
+
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/rom"
 )
 
 type Mbc1 struct {

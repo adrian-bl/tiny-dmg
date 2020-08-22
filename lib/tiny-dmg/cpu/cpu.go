@@ -2,7 +2,8 @@ package cpu
 
 import (
 	"fmt"
-	"tiny-dmg/memory"
+
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/memory"
 )
 
 type GbCpu struct {

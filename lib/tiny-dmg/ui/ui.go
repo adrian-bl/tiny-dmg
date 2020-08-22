@@ -8,9 +8,10 @@ import (
 	"log"
 	"runtime"
 	"time"
-	"tiny-dmg/joypad"
-	"tiny-dmg/lcd"
-	"tiny-dmg/memory"
+
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/joypad"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/lcd"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/memory"
 )
 
 const (

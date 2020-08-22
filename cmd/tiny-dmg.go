@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"tiny-dmg/cpu"
-	"tiny-dmg/joypad"
-	"tiny-dmg/lcd"
-	"tiny-dmg/machine"
-	"tiny-dmg/memory"
-	"tiny-dmg/rom"
-	"tiny-dmg/ui"
+
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/cpu"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/joypad"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/lcd"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/machine"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/memory"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/rom"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/ui"
 )
 
 func main() {

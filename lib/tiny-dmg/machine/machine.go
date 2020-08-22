@@ -3,11 +3,12 @@ package machine
 import (
 	"fmt"
 	"time"
-	"tiny-dmg/cpu"
-	"tiny-dmg/interrupts"
-	"tiny-dmg/lcd"
-	"tiny-dmg/memory"
-	"tiny-dmg/timer"
+
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/cpu"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/interrupts"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/lcd"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/memory"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/timer"
 )
 
 type Machine struct {

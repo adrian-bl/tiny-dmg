@@ -3,9 +3,10 @@ package memory
 import (
 	"fmt"
 	"io/ioutil"
-	"tiny-dmg/joypad"
-	"tiny-dmg/mbc"
-	"tiny-dmg/rom"
+
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/joypad"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/mbc"
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/rom"
 )
 
 type Memory struct {

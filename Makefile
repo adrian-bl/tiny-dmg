@@ -1,8 +1,5 @@
 default:
-	go build -o tdmg main.go
-
-fmt:
-	find main.go src/tiny-dmg -type f -exec gofmt -w {} \;
+	go build -o tiny-dmg cmd/tiny-dmg.go
 
 test: default
 	./tdmg

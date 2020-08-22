@@ -2,7 +2,8 @@ package lcd
 
 import (
 	"fmt"
-	"tiny-dmg/memory"
+
+	"github.com/adrian-bl/tiny-dmg/lib/tiny-dmg/memory"
 )
 
 const (
