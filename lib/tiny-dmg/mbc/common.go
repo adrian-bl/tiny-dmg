@@ -21,7 +21,7 @@ type RawMemoryAccess interface {
 
 func GetMbc(b, r *rom.RomImage) MemoryBankController {
 	var mbc MemoryBankController
-	switch r.RomType {
+	switch r.RomType & 0x7 {
 	case 0:
 		mbc = newMbc0()
 	case 1:
