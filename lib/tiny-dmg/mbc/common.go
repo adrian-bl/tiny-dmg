@@ -21,14 +21,16 @@ type RawMemoryAccess interface {
 
 func GetMbc(b, r *rom.RomImage) MemoryBankController {
 	var mbc MemoryBankController
-	switch r.RomType & 0x7 {
-	case 0:
+
+	t := r.RomType
+
+	if t == 0 {
 		mbc = newMbc0()
-	case 1:
+	} else if t == 0x1 || t == 0x2 || t == 0x3 {
 		mbc = newMbc1()
-	case 3:
+	} else if t == 0x0F || t == 0x10 || t == 0x11 || t == 0x12 || t == 0x13 {
 		mbc = newMbc3()
-	default:
+	} else {
 		panic(fmt.Errorf("ROM requested MBC%d, but no such implementation is known.\n", r.RomType))
 	}
 	return newBios(b, mbc)
