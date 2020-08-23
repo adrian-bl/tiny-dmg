@@ -35,7 +35,7 @@ func (mach *Machine) PowerOn() {
 	mach.cpu.PowerOn()
 }
 
-var XLOG = "mgba"
+var XLOG = "none"
 
 func (mach *Machine) Run() {
 	fmt.Printf("Starting Z80 emulation, initial pc=%08X\n", mach.cpu.Reg.PC)
@@ -109,18 +109,5 @@ func (mach *Machine) Run() {
 		mach.lcd.Update(cycles)
 		mach.itr.Update(mach.cpu, mach.mem)
 		mach.tmr.Update(mach.cpu, mach.mem, cycles)
-		serialHack(mach.cpu, mach.mem)
-	}
-}
-
-// Super quick hack to get Alleyway past the title screen.
-func serialHack(gb *cpu.GbCpu, m *memory.Memory) {
-	if gb.ClockCycles%4096 == 0 {
-		v := m.GetRaw(memory.RegSerialTransferControl)
-		if v == 0x81 { // Transfer with internal clock requested
-			m.WriteRaw(memory.RegSerialTransferControl, 0x01) // Clear transfer
-			m.WriteRaw(memory.RegSerialTransferData, 0xFF)    // Simulate no data
-			m.WriteRawSet(memory.RegInterruptFlag, memory.BitIrSerial)
-		}
 	}
 }

@@ -104,7 +104,13 @@ func (m *Memory) WriteByte(addr uint16, val byte) {
 			m.mbc.DisableBootRom(&m.mbc, val)
 			return
 		case RegSerialTransferControl:
-			// handled by machine.
+			// This just pretends that no data is there.
+			if val&0x81 == 0x81 { // Transfer requested, use internal clock.
+				// Clear the 7th bit and write 'no data' imediately.
+				val = val & 0x7F
+				m.memory[RegSerialTransferData] = 0xFF
+				m.WriteRawSet(RegInterruptFlag, BitIrSerial)
+			}
 		case RegDivider:
 			val = 0
 			// does NOT return: write just resets it.
