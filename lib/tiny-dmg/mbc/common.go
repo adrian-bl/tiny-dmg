@@ -26,6 +26,8 @@ func GetMbc(b, r *rom.RomImage) MemoryBankController {
 		mbc = newMbc0()
 	case 1:
 		mbc = newMbc1()
+	case 3:
+		mbc = newMbc3()
 	default:
 		panic(fmt.Errorf("ROM requested MBC%d, but no such implementation is known.\n", r.RomType))
 	}
