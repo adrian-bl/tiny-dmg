@@ -20,8 +20,11 @@ func newMbc1() MemoryBankController {
 
 func (mbc *Mbc1) ReadFromRom(r *rom.RomImage, addr uint16) uint8 {
 	real := uint32(addr)
-	if addr >= 0x4000 {
+	if addr >= 0x4000 && addr <= 0x7fff {
 		real = uint32(addr) + (0x4000 * uint32(mbc.bank-1))
+	} else if addr >= 0xA000 && addr <= 0xBFFF {
+		// handled by memory, should never reach this.
+		panic(nil)
 	}
 	return r.GetByte(real)
 }
@@ -35,8 +38,15 @@ func (mbc *Mbc1) WriteToRom(addr uint16, val uint8) {
 		}
 	} else if addr >= 2000 && addr <= 0x3FFF {
 		bank := val & 0x1F
-		if bank == 0 {
+		switch bank {
+		case 0:
 			bank = 1
+		case 0x20:
+			fallthrough
+		case 0x40:
+			fallthrough
+		case 0x60:
+			bank++
 		}
 		mbc.bank = bank
 		fmt.Printf("ROM selects bank %d\n", bank)

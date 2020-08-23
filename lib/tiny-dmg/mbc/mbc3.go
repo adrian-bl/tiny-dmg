@@ -26,6 +26,7 @@ func (mbc *Mbc3) ReadFromRom(r *rom.RomImage, addr uint16) uint8 {
 		real = uint32(addr) + (0x4000 * uint32(mbc.romBank-1))
 	}
 	if addr >= 0xA000 && addr <= 0xBFFF {
+		// handled by memory.go, should never reach this.
 		panic(fmt.Errorf("Not implemented"))
 	}
 	return r.GetByte(real)
